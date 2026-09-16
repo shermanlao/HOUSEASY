@@ -27,10 +27,14 @@ export async function createSession(user: User): Promise<void> {
     .setIssuedAt()
     .sign(JWT_SECRET);
 
+  // Secure cookies are only sent over HTTPS. Until SSL is enabled for houseasy.io,
+  // set COOKIE_SECURE=false (or omit it) so login works on HTTP.
+  const secure = process.env.COOKIE_SECURE === 'true';
+
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure,
     sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 7,
     path: '/',

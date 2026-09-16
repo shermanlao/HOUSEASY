@@ -16,11 +16,14 @@ Separate site from levolight.com on the same VPS (`187.7.21.12`).
 ```env
 DATABASE_URL="postgresql://houseasy:PASSWORD@127.0.0.1:5432/houseasy?schema=public"
 JWT_SECRET="long-random-string"
+COOKIE_SECURE="false"
 PORT=3001
 HOSTNAME=127.0.0.1
 ```
 
 `JWT_SECRET` signs login sessions. Anyone with this value can forge sessions — keep it private and long/random.
+
+`COOKIE_SECURE` must stay `false` while the site is HTTP-only. After Certbot/HTTPS is enabled, set it to `true` and restart PM2, or browsers will not keep the login cookie.
 
 # Deploy / update
 
