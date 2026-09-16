@@ -22,20 +22,27 @@ HOSTNAME=127.0.0.1
 
 `JWT_SECRET` signs login sessions. Anyone with this value can forge sessions — keep it private and long/random.
 
-## Deploy / update
+# Deploy / update
+
+From your PC (PowerShell), with the SSH key used for this VPS:
+
+```powershell
+$env:GIT_SSH_COMMAND = 'ssh -i "C:/Users/user/.ssh/id_ed25519_levo" -o BatchMode=yes'
+git -c safe.directory=* push houseasy-vps main
+```
+
+On the VPS:
 
 ```bash
-# From your PC (with SSH key):
-git push houseasy-vps main
-
-# On VPS:
 cd /var/www/houseasy-app
 git pull
-npm ci
+npm install
 npx prisma migrate deploy
 npm run build
 pm2 restart houseasy
 ```
+
+First-time clone note: set bare repo HEAD to `main` (`git --git-dir=/var/git/houseasy.git symbolic-ref HEAD refs/heads/main`).
 
 ## Nginx
 
