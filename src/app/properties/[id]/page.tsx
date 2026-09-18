@@ -24,7 +24,7 @@ export default async function PropertyDetailPage({
         <Link href="/">??</Link>
         <Link href="/properties">????</Link>
         {session?.role === 'ADMIN' && <Link href="/admin/users">????</Link>}
-        <LogoutButton />
+        <Link href="/logout">??</Link>
       </nav>
 
       <div style={{ marginTop: '1.5rem' }}>
