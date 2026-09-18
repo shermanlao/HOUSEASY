@@ -22,13 +22,13 @@ Separate site from levolight.com on the same VPS (`187.7.21.12`).
 ```env
 DATABASE_URL="postgresql://houseasy:PASSWORD@127.0.0.1:5432/houseasy?schema=public"
 JWT_SECRET="long-random-string"
-COOKIE_SECURE="false"
+COOKIE_SECURE="true"
 PORT=3002
 HOSTNAME=127.0.0.1
 NODE_ENV=production
 ```
 
-`COOKIE_SECURE` must stay `false` while the site is HTTP-only. After Certbot/HTTPS, set it to `true` and restart PM2.
+`COOKIE_SECURE` must be `true` with HTTPS enabled so login session cookies are accepted by the browser.
 
 ### PropertySearching (`/var/www/houseasy-search/.env`)
 
@@ -39,9 +39,12 @@ HOSTNAME=127.0.0.1
 NODE_ENV=production
 ```
 
-## Nginx (HTTP)
+## Nginx (HTTPS)
 
-`/rental` must be declared before `/`:
+HTTP (80) redirects to HTTPS; ACME challenges remain at `/.well-known/acme-challenge/`.  
+Certificate: Let's Encrypt (`/etc/letsencrypt/live/houseasy.io/`), auto-renew via Certbot.
+
+On the **443** server block, `/rental` must be declared before `/`:
 
 ```nginx
 location /rental { proxy_pass http://127.0.0.1:3002; ... }
@@ -94,7 +97,8 @@ pm2 restart houseasy-search
 ## Verify
 
 ```bash
-curl -sI -H 'Host: houseasy.io' http://127.0.0.1/
-curl -sI -H 'Host: houseasy.io' http://127.0.0.1/rental/login
+curl -sI https://houseasy.io/
+curl -sI https://houseasy.io/rental/login
+curl -sI http://houseasy.io/   # expect 301 → https
 curl -sI -H 'Host: levolight.com' http://127.0.0.1/
 ```
