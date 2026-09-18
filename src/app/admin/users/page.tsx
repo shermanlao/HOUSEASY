@@ -3,20 +3,21 @@ import Link from 'next/link';
 import { getSession } from '@/lib/auth';
 import { getUsers } from '@/actions/admin';
 import { AddUserForm } from './AddUserForm';
+import { LogoutButton } from '@/components/LogoutButton';
 
 export default async function AdminUsersPage() {
   const session = await getSession();
-  if (!session || session.role !== 'ADMIN') redirect('/');
+  if (!session) redirect('/login');
+  if (session.role !== 'ADMIN') redirect('/properties');
 
   const users = await getUsers();
 
   return (
     <div className="container" style={{ paddingTop: '2rem' }}>
       <nav className="nav">
-        <Link href="/">首頁</Link>
         <Link href="/properties">物業管理</Link>
         <Link href="/admin/users">用戶管理</Link>
-        <Link href="/logout">登出</Link>
+        <LogoutButton />
       </nav>
       <h1 style={{ marginTop: '1.5rem' }}>用戶管理</h1>
 

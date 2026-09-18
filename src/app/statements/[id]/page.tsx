@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { LogoutButton } from '@/components/LogoutButton';
 import { notFound } from 'next/navigation';
 import { getSession } from '@/lib/auth';
 import { getStatement } from '@/actions/statement';
@@ -29,7 +30,7 @@ export default async function StatementDetailPage({
         <Link href="/">首頁</Link>
         <Link href="/properties">物業管理</Link>
         {session?.role === 'ADMIN' && <Link href="/admin/users">用戶管理</Link>}
-        <Link href="/logout">登出</Link>
+        <LogoutButton />
       </nav>
       <div style={{ marginTop: '1rem' }}>
         <Link href={`/properties/${stmt.propertyId}/statements`}>← 返回租單列表</Link>

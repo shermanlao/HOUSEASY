@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/auth';
 import { getPropertiesForUser } from '@/actions/property';
+import { LogoutButton } from '@/components/LogoutButton';
 
 export default async function PropertiesPage() {
   const session = await getSession();
@@ -15,7 +16,7 @@ export default async function PropertiesPage() {
       <nav className="nav">
         <Link href="/properties">物業管理</Link>
         {session.role === 'ADMIN' && <Link href="/admin/users">用戶管理</Link>}
-        <Link href="/logout">登出</Link>
+        <LogoutButton />
       </nav>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
         <h1 style={{ margin: 0 }}>我的物業</h1>
