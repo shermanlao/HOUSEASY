@@ -5,15 +5,22 @@ import { requireAuth } from '@/lib/auth';
 
 export async function getPropertiesForUser() {
   const session = await requireAuth();
+  const include = {
+    tenants: true,
+    _count: { select: { statements: true } },
+  } as const;
+
+  if (session.role === 'ADMIN') {
+    return prisma.property.findMany({
+      include,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   const owners = await prisma.propertyOwner.findMany({
     where: { userId: session.id },
     include: {
-      property: {
-        include: {
-          tenants: true,
-          _count: { select: { statements: true } },
-        },
-      },
+      property: { include },
     },
   });
   return owners.map((o) => o.property);
