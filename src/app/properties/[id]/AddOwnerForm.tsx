@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { withBasePath } from '@/lib/base-path';
 
 export function AddOwnerForm({ propertyId }: { propertyId: string }) {
   const router = useRouter();
@@ -13,7 +14,7 @@ export function AddOwnerForm({ propertyId }: { propertyId: string }) {
     const form = e.currentTarget;
     const email = (form.querySelector('[name="email"]') as HTMLInputElement)?.value;
     if (!email) return;
-    const res = await fetch('/api/properties/owners', {
+    const res = await fetch(withBasePath('/api/properties/owners'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ propertyId, email }),

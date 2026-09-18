@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { withBasePath } from '@/lib/base-path';
 
 type Property = {
   id: string;
@@ -48,7 +49,7 @@ export function CreateStatementForm({ property }: { property: Property }) {
       };
     });
 
-    const res = await fetch('/api/statements', {
+    const res = await fetch(withBasePath('/api/statements'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

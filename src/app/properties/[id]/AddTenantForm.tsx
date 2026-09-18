@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { withBasePath } from '@/lib/base-path';
 
 export function AddTenantForm({
   propertyId,
@@ -17,7 +18,7 @@ export function AddTenantForm({
     const form = e.currentTarget;
     const formData = new FormData(form);
     formData.set('propertyId', propertyId);
-    const res = await fetch('/api/tenants', {
+    const res = await fetch(withBasePath('/api/tenants'), {
       method: 'POST',
       body: formData,
     });

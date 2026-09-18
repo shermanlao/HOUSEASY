@@ -5,4 +5,4 @@
 | [README.md](../README.md) | Project overview, local run, deployment pointers |
 | [LOCAL-SETUP.md](LOCAL-SETUP.md) | UNC / network-drive local install notes |
 | [DEPLOY-POSTGRESQL.md](DEPLOY-POSTGRESQL.md) | Switching Prisma to PostgreSQL (schema notes) |
-| [DEPLOY-VPS-HOSTINGER.md](DEPLOY-VPS-HOSTINGER.md) | Hostinger VPS deploy for houseasy.io (Nginx + PM2 + Postgres) |
+| [DEPLOY-VPS-HOSTINGER.md](DEPLOY-VPS-HOSTINGER.md) | Hostinger VPS: PropertySearching at `/` + RentalEasy at `/rental` (Nginx + PM2) |

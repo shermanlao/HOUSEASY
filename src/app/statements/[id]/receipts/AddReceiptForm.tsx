@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { withBasePath } from '@/lib/base-path';
 
 export function AddReceiptForm({ statementId }: { statementId: string }) {
   const router = useRouter();
@@ -13,7 +14,7 @@ export function AddReceiptForm({ statementId }: { statementId: string }) {
     const form = e.currentTarget;
     const formData = new FormData(form);
     formData.set('statementId', statementId);
-    const res = await fetch('/api/receipts', {
+    const res = await fetch(withBasePath('/api/receipts'), {
       method: 'POST',
       body: formData,
     });

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { withBasePath } from '@/lib/base-path';
 
 export function AddUserForm() {
   const router = useRouter();
@@ -12,7 +13,7 @@ export function AddUserForm() {
     setError('');
     const form = e.currentTarget;
     const formData = new FormData(form);
-    const res = await fetch('/api/admin/users', {
+    const res = await fetch(withBasePath('/api/admin/users'), {
       method: 'POST',
       body: formData,
     });

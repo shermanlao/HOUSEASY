@@ -1,7 +1,9 @@
 import { clearSession } from '@/lib/auth';
+import { withBasePath } from '@/lib/base-path';
 import { NextResponse } from 'next/server';
 
-export async function POST() {
+export async function POST(request: Request) {
   await clearSession();
-  return NextResponse.redirect(new URL('/login', process.env.NEXTAUTH_URL || 'http://localhost:3000'));
+  const url = new URL(request.url);
+  return NextResponse.redirect(new URL(withBasePath('/login'), url.origin));
 }
