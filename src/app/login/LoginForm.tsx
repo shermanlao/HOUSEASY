@@ -23,7 +23,7 @@ export function LoginForm() {
       setError(data.error || '登入失敗');
       return;
     }
-    router.push('/');
+    router.push('/properties');
     router.refresh();
   }
 

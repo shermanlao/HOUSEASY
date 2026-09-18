@@ -4,7 +4,7 @@ import { LoginForm } from './LoginForm';
 
 export default async function LoginPage() {
   const session = await getSession();
-  if (session) redirect('/');
+  if (session) redirect('/properties');
   return (
     <div className="container" style={{ paddingTop: '4rem', maxWidth: '400px' }}>
       <div className="card">
