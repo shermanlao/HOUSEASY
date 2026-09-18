@@ -33,3 +33,50 @@ export async function getUsers() {
     select: { id: true, email: true, name: true, role: true, createdAt: true },
   });
 }
+
+export async function updateUser(data: {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  password?: string;
+}) {
+  await requireAdmin();
+  const { id, email, name, role, password } = data;
+
+  if (!id || !email || !name || !role) {
+    return { error: '請填寫所有必填欄位' };
+  }
+  if (role !== 'ADMIN' && role !== 'OWNER') {
+    return { error: '角色無效' };
+  }
+  if (password && password.length < 6) {
+    return { error: '密碼至少 6 位' };
+  }
+
+  const existing = await prisma.user.findUnique({ where: { id } });
+  if (!existing) {
+    return { error: '用戶不存在' };
+  }
+
+  const emailTaken = await prisma.user.findFirst({
+    where: { email, NOT: { id } },
+  });
+  if (emailTaken) {
+    return { error: '此電郵已被其他用戶使用' };
+  }
+
+  const updateData: {
+    email: string;
+    name: string;
+    role: string;
+    passwordHash?: string;
+  } = { email, name, role };
+
+  if (password) {
+    updateData.passwordHash = await bcrypt.hash(password, 10);
+  }
+
+  await prisma.user.update({ where: { id }, data: updateData });
+  return { success: true };
+}

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { getSession } from '@/lib/auth';
 import { getUsers } from '@/actions/admin';
 import { AddUserForm } from './AddUserForm';
+import { UsersList } from './UsersList';
 import { LogoutButton } from '@/components/LogoutButton';
 
 export default async function AdminUsersPage() {
@@ -11,6 +12,10 @@ export default async function AdminUsersPage() {
   if (session.role !== 'ADMIN') redirect('/properties');
 
   const users = await getUsers();
+  const rows = users.map((u) => ({
+    ...u,
+    createdAt: u.createdAt.toISOString(),
+  }));
 
   return (
     <div className="container" style={{ paddingTop: '2rem' }}>
@@ -28,26 +33,10 @@ export default async function AdminUsersPage() {
 
       <div className="card" style={{ marginTop: '1.5rem' }}>
         <h2 style={{ marginBottom: '1rem' }}>用戶列表</h2>
-        <table className="table">
-          <thead>
-            <tr>
-              <th>電郵</th>
-              <th>姓名</th>
-              <th>角色</th>
-              <th>建立時間</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((u) => (
-              <tr key={u.id}>
-                <td>{u.email}</td>
-                <td>{u.name}</td>
-                <td>{u.role === 'ADMIN' ? '管理員' : '業主'}</td>
-                <td>{new Date(u.createdAt).toLocaleDateString('zh-Hant')}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <p style={{ fontSize: '0.875rem', color: 'var(--muted)', marginBottom: '0.75rem' }}>
+          點擊列以編輯用戶
+        </p>
+        <UsersList users={rows} />
       </div>
     </div>
   );
