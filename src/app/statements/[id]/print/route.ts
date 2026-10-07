@@ -1,5 +1,6 @@
 import { getStatement } from '@/actions/statement';
 import { renderStatementHTML } from '@/lib/documents/statement-html';
+import { statementPdfFilename, withPrintChrome } from '@/lib/documents/print-chrome';
 import { NextResponse } from 'next/server';
 
 export async function GET(
@@ -12,7 +13,10 @@ export async function GET(
     return new NextResponse('Not Found', { status: 404 });
   }
 
-  const html = renderStatementHTML(stmt);
+  const html = withPrintChrome(
+    renderStatementHTML(stmt),
+    statementPdfFilename(stmt.periodStart, stmt.tenant.nameChinese || stmt.tenant.nameEnglish)
+  );
   return new NextResponse(html, {
     headers: {
       'Content-Type': 'text/html; charset=utf-8',

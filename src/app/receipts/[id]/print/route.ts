@@ -1,5 +1,6 @@
 import { getReceipt } from '@/actions/receipt';
 import { renderReceiptHTML } from '@/lib/documents/receipt-html';
+import { receiptPdfFilename, withPrintChrome } from '@/lib/documents/print-chrome';
 import { NextResponse } from 'next/server';
 
 export async function GET(
@@ -12,7 +13,13 @@ export async function GET(
     return new NextResponse('Not Found', { status: 404 });
   }
 
-  const html = renderReceiptHTML(receipt);
+  const html = withPrintChrome(
+    renderReceiptHTML(receipt),
+    receiptPdfFilename(
+      receipt.paymentDate,
+      receipt.statement.tenant.nameChinese || receipt.statement.tenant.nameEnglish
+    )
+  );
   return new NextResponse(html, {
     headers: {
       'Content-Type': 'text/html; charset=utf-8',

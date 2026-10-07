@@ -9,3 +9,4 @@
 | [ADMIN-USERS.md](ADMIN-USERS.md) | Admin user list, edit dialog, and delete (`/rental/admin/users`) |
 | [ROOMS.md](ROOMS.md) | Rooms under a property; tenants and statements belong to a room |
 | [SEARCH-ADMIN.md](SEARCH-ADMIN.md) | Admin property-search control panel (`/rental/admin/search`) |
+| [PRINT.md](PRINT.md) | Statement and receipt print page, including Download PDF |
