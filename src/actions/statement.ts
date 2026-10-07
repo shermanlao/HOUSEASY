@@ -2,24 +2,39 @@
 
 import { prisma } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
-export async function getStatementsForProperty(propertyId: string, tenantId?: string) {
-  const session = await requireAuth();
-  const owned = await prisma.propertyOwner.findFirst({
-    where: { propertyId, userId: session.id },
-  });
-  if (!owned && session.role !== 'ADMIN') return [];
+import { accessiblePropertyIds, canAccessProperty, canAccessRoom } from '@/lib/access';
 
-  const where: { propertyId: string; tenantId?: string } = { propertyId };
-  if (tenantId) where.tenantId = tenantId;
+const statementInclude = {
+  tenant: true,
+  room: { include: { property: true } },
+  billings: { orderBy: { placement: 'asc' as const } },
+  rentings: { orderBy: { placement: 'asc' as const } },
+  receipts: true,
+};
+
+export async function getStatementsForUser(opts?: { propertyId?: string; roomId?: string; tenantId?: string }) {
+  const session = await requireAuth();
+  const propertyIds = await accessiblePropertyIds(session);
+
+  if (opts?.propertyId && !(await canAccessProperty(opts.propertyId, session))) return [];
+  if (opts?.roomId && !(await canAccessRoom(opts.roomId, session))) return [];
 
   return prisma.statement.findMany({
-    where,
-    include: {
-      tenant: true,
-      billings: { orderBy: { placement: 'asc' } },
-      rentings: { orderBy: { placement: 'asc' } },
-      receipts: true,
+    where: {
+      ...(opts?.tenantId ? { tenantId: opts.tenantId } : {}),
+      ...(opts?.roomId
+        ? { roomId: opts.roomId }
+        : {
+            room: {
+              ...(opts?.propertyId
+                ? { propertyId: opts.propertyId }
+                : propertyIds === null
+                  ? {}
+                  : { propertyId: { in: propertyIds } }),
+            },
+          }),
     },
+    include: statementInclude,
     orderBy: { periodStart: 'desc' },
   });
 }
@@ -28,19 +43,10 @@ export async function getStatement(id: string) {
   const session = await requireAuth();
   const stmt = await prisma.statement.findUnique({
     where: { id },
-    include: {
-      property: true,
-      tenant: true,
-      billings: { orderBy: { placement: 'asc' } },
-      rentings: { orderBy: { placement: 'asc' } },
-      receipts: true,
-    },
+    include: statementInclude,
   });
   if (!stmt) return null;
-  const owned = await prisma.propertyOwner.findFirst({
-    where: { propertyId: stmt.propertyId, userId: session.id },
-  });
-  if (!owned && session.role !== 'ADMIN') return null;
+  if (!(await canAccessRoom(stmt.roomId, session))) return null;
   return stmt;
 }
 
@@ -62,7 +68,7 @@ interface RentingInput {
 }
 
 export async function createStatement(data: {
-  propertyId: string;
+  roomId: string;
   tenantId: string;
   periodStart: Date;
   periodEnd: Date;
@@ -70,16 +76,18 @@ export async function createStatement(data: {
   rentings: RentingInput[];
 }) {
   const session = await requireAuth();
-  const owned = await prisma.propertyOwner.findFirst({
-    where: { propertyId: data.propertyId, userId: session.id },
-  });
-  if (!owned && session.role !== 'ADMIN') {
+  if (!(await canAccessRoom(data.roomId, session))) {
     return { error: '權限不足' };
+  }
+
+  const tenant = await prisma.tenant.findUnique({ where: { id: data.tenantId } });
+  if (!tenant || tenant.roomId !== data.roomId) {
+    return { error: '租客不屬於此房間' };
   }
 
   await prisma.statement.create({
     data: {
-      propertyId: data.propertyId,
+      roomId: data.roomId,
       tenantId: data.tenantId,
       periodStart: data.periodStart,
       periodEnd: data.periodEnd,

@@ -7,3 +7,5 @@
 | [DEPLOY-POSTGRESQL.md](DEPLOY-POSTGRESQL.md) | Switching Prisma to PostgreSQL (schema notes) |
 | [DEPLOY-VPS-HOSTINGER.md](DEPLOY-VPS-HOSTINGER.md) | Hostinger VPS: PropertySearching at `/` + RentalEasy at `/rental` (Nginx + PM2) |
 | [ADMIN-USERS.md](ADMIN-USERS.md) | Admin user list, edit dialog, and delete (`/rental/admin/users`) |
+| [ROOMS.md](ROOMS.md) | Rooms under a property; tenants and statements belong to a room |
+| [SEARCH-ADMIN.md](SEARCH-ADMIN.md) | Admin property-search control panel (`/rental/admin/search`) |

@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
+import { canAccessRoom } from '@/lib/access';
 
 export async function getReceipt(id: string) {
   const session = await requireAuth();
@@ -10,16 +11,13 @@ export async function getReceipt(id: string) {
     include: {
       statement: {
         include: {
-          property: true,
+          room: { include: { property: true } },
           tenant: true,
         },
       },
     },
   });
   if (!receipt) return null;
-  const owned = await prisma.propertyOwner.findFirst({
-    where: { propertyId: receipt.statement.propertyId, userId: session.id },
-  });
-  if (!owned && session.role !== 'ADMIN') return null;
+  if (!(await canAccessRoom(receipt.statement.roomId, session))) return null;
   return receipt;
 }

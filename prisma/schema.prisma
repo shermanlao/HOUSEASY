@@ -34,74 +34,85 @@ model Property {
   name           String   @default("")
   addressChinese String
   addressEnglish String
-  monthlyRent    Float
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  owners    PropertyOwner[]
-  tenants   Tenant[]
+  owners PropertyOwner[]
+  rooms  Room[]
+}
+
+model Room {
+  id          String   @id @default(cuid())
+  name        String
+  monthlyRent Float
+  propertyId  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  property   Property    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  tenants    Tenant[]
   statements Statement[]
 }
 
 model Tenant {
-  id             String   @id @default(cuid())
+  id             String  @id @default(cuid())
   nameChinese    String
   nameEnglish    String
   phone          String
   passportOrHkid String?
-  propertyId     String
+  roomId         String
 
-  property    Property    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  statements  Statement[]
+  room       Room        @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  statements Statement[]
 }
 
 model Statement {
   id          String   @id @default(cuid())
   periodStart DateTime
   periodEnd   DateTime
-  propertyId  String
+  roomId      String
   tenantId    String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  property  Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  billings  Billing[]
-  rentings  Renting[]
-  receipts  Receipt[]
+  room     Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  billings Billing[]
+  rentings Renting[]
+  receipts Receipt[]
 }
 
 model Billing {
-  id           String   @id @default(cuid())
-  issueDate    DateTime
-  title        String
-  qty          Float
-  unitRate     Float
-  lastReading  Float
-  thisReading  Float
-  placement    Int      @default(0)
-  statementId  String
+  id          String   @id @default(cuid())
+  issueDate   DateTime
+  title       String
+  qty         Float
+  unitRate    Float
+  lastReading Float
+  thisReading Float
+  placement   Int      @default(0)
+  statementId String
 
   statement Statement @relation(fields: [statementId], references: [id], onDelete: Cascade)
 }
 
 model Renting {
-  id               String   @id @default(cuid())
-  lastPaymentDate  DateTime
-  openingBalance   Float
-  paymentReceived  Float
-  placement        Int      @default(0)
-  statementId      String
+  id              String   @id @default(cuid())
+  lastPaymentDate DateTime
+  openingBalance  Float
+  paymentReceived Float
+  placement       Int      @default(0)
+  statementId     String
 
   statement Statement @relation(fields: [statementId], references: [id], onDelete: Cascade)
 }
 
 model Receipt {
-  id              String   @id @default(cuid())
-  paymentDate     DateTime
-  amountReceived  Float
-  statementId     String
-  createdAt       DateTime @default(now())
+  id             String   @id @default(cuid())
+  paymentDate    DateTime
+  amountReceived Float
+  statementId    String
+  createdAt      DateTime @default(now())
 
   statement Statement @relation(fields: [statementId], references: [id], onDelete: Cascade)
 }

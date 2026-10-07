@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/auth';
 import { getPropertiesForUser } from '@/actions/property';
-import { LogoutButton } from '@/components/LogoutButton';
+import { PageShell } from '@/components/PageShell';
 
 export default async function PropertiesPage() {
   const session = await getSession();
@@ -12,12 +12,7 @@ export default async function PropertiesPage() {
   const properties = await getPropertiesForUser();
 
   return (
-    <div className="container" style={{ paddingTop: '2rem' }}>
-      <nav className="nav">
-        <Link href="/properties">物業管理</Link>
-        {session.role === 'ADMIN' && <Link href="/admin/users">用戶管理</Link>}
-        <LogoutButton />
-      </nav>
+    <PageShell role={session.role}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
         <h1 style={{ margin: 0 }}>我的物業</h1>
         <Link href="/properties/new" className="btn btn-primary">
@@ -35,30 +30,34 @@ export default async function PropertiesPage() {
                 <th>物業名稱</th>
                 <th>地址（中文）</th>
                 <th>地址（英文）</th>
-                <th>月租</th>
+                <th>房間數</th>
                 <th>租客數</th>
                 <th>租單數</th>
                 <th>操作</th>
               </tr>
             </thead>
             <tbody>
-              {properties.map((p) => (
-                <tr key={p.id}>
-                  <td>{p.name || p.addressChinese || '-'}</td>
-                  <td>{p.addressChinese}</td>
-                  <td>{p.addressEnglish}</td>
-                  <td>${Number(p.monthlyRent).toLocaleString()}</td>
-                  <td>{p.tenants.length}</td>
-                  <td>{p._count?.statements ?? 0}</td>
-                  <td>
-                    <Link href={`/properties/${p.id}`}>檢視</Link>
-                  </td>
-                </tr>
-              ))}
+              {properties.map((p) => {
+                const tenantCount = p.rooms.reduce((n, r) => n + r.tenants.length, 0);
+                const statementCount = p.rooms.reduce((n, r) => n + r._count.statements, 0);
+                return (
+                  <tr key={p.id}>
+                    <td>{p.name || p.addressChinese || '-'}</td>
+                    <td>{p.addressChinese}</td>
+                    <td>{p.addressEnglish}</td>
+                    <td>{p._count.rooms}</td>
+                    <td>{tenantCount}</td>
+                    <td>{statementCount}</td>
+                    <td>
+                      <Link href={`/properties/${p.id}`}>檢視</Link>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
       </div>
-    </div>
+    </PageShell>
   );
 }

@@ -34,10 +34,9 @@ async function main() {
   if (!property) {
     property = await prisma.property.create({
       data: {
-        name: '金勳大樓15樓07室 (C)房',
+        name: '金勳大樓15樓07室',
         addressChinese: '彌敦道379號金勳大樓15樓07室 (C)房',
         addressEnglish: '379 NATHAN RD HONOUR HOUSE 14/F FLAT 07 (RM C)',
-        monthlyRent: 6500,
       },
     });
   }
@@ -51,8 +50,21 @@ async function main() {
     });
   }
 
+  let room = await prisma.room.findFirst({
+    where: { propertyId: property.id, name: '(C)房' },
+  });
+  if (!room) {
+    room = await prisma.room.create({
+      data: {
+        name: '(C)房',
+        monthlyRent: 6500,
+        propertyId: property.id,
+      },
+    });
+  }
+
   let tenant = await prisma.tenant.findFirst({
-    where: { propertyId: property.id, nameChinese: '陳鷺思' },
+    where: { roomId: room.id, nameChinese: '陳鷺思' },
   });
   if (!tenant) {
     tenant = await prisma.tenant.create({
@@ -61,14 +73,14 @@ async function main() {
         nameEnglish: 'CHAN, Lo Sze Celia',
         phone: '6056 0546',
         passportOrHkid: 'A1234567',
-        propertyId: property.id,
+        roomId: room.id,
       },
     });
   }
 
   const existingStatement = await prisma.statement.findFirst({
     where: {
-      propertyId: property.id,
+      roomId: room.id,
       tenantId: tenant.id,
       periodStart: new Date('2026-01-01'),
     },
@@ -83,7 +95,7 @@ async function main() {
     data: {
       periodStart: new Date('2026-01-01'),
       periodEnd: new Date('2026-01-31'),
-      propertyId: property.id,
+      roomId: room.id,
       tenantId: tenant.id,
       billings: {
         create: [
@@ -128,7 +140,13 @@ async function main() {
     },
   });
 
-  console.log('Seed completed:', { admin: admin.email, owner: owner.email, property: property.id, tenant: tenant.id });
+  console.log('Seed completed:', {
+    admin: admin.email,
+    owner: owner.email,
+    property: property.id,
+    room: room.id,
+    tenant: tenant.id,
+  });
 }
 
 main()

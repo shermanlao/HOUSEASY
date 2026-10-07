@@ -1,10 +1,9 @@
 import Link from 'next/link';
-import { LogoutButton } from '@/components/LogoutButton';
 import { notFound } from 'next/navigation';
 import { getSession } from '@/lib/auth';
 import { getProperty } from '@/actions/property';
-import { AddTenantForm } from './AddTenantForm';
 import { AddOwnerForm } from './AddOwnerForm';
+import { PageShell } from '@/components/PageShell';
 
 export default async function PropertyDetailPage({
   params,
@@ -19,14 +18,7 @@ export default async function PropertyDetailPage({
   const canEdit = property.owners.some((o) => o.userId === session?.id) || session?.role === 'ADMIN';
 
   return (
-    <div className="container" style={{ paddingTop: '2rem' }}>
-      <nav className="nav">
-        <Link href="/">首頁</Link>
-        <Link href="/properties">物業管理</Link>
-        {session?.role === 'ADMIN' && <Link href="/admin/users">用戶管理</Link>}
-        <LogoutButton />
-      </nav>
-
+    <PageShell role={session?.role} propertyId={id}>
       <div style={{ marginTop: '1.5rem' }}>
         <Link href="/properties" style={{ fontSize: '0.875rem' }}>
           ← 返回物業列表
@@ -52,10 +44,6 @@ export default async function PropertyDetailPage({
               <td>{property.addressEnglish}</td>
             </tr>
             <tr>
-              <td style={{ fontWeight: 600 }}>月租</td>
-              <td>${Number(property.monthlyRent).toLocaleString()}</td>
-            </tr>
-            <tr>
               <td style={{ fontWeight: 600 }}>業主</td>
               <td>
                 {property.owners.map((o) => o.user.name).join(', ')}
@@ -71,30 +59,34 @@ export default async function PropertyDetailPage({
       </div>
 
       <div className="card" style={{ marginTop: '1.5rem' }}>
-        <h2 style={{ marginBottom: '1rem' }}>租客</h2>
-        {canEdit && <AddTenantForm propertyId={id} />}
-        {property.tenants.length === 0 ? (
-          <p style={{ marginTop: '1rem', color: 'var(--muted)' }}>尚無租客</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+          <h2 style={{ margin: 0 }}>房間</h2>
+          <Link href={`/properties/${id}/rooms`} className="btn btn-primary">
+            房間管理
+          </Link>
+        </div>
+        {property.rooms.length === 0 ? (
+          <p style={{ color: 'var(--muted)' }}>尚無房間，請先新增。</p>
         ) : (
-          <table className="table" style={{ marginTop: '1rem' }}>
+          <table className="table">
             <thead>
               <tr>
-                <th>姓名（中文）</th>
-                <th>姓名（英文）</th>
-                <th>電話</th>
-                <th>護照/身份證</th>
+                <th>房間名稱</th>
+                <th>月租</th>
+                <th>租客數</th>
+                <th>租單數</th>
                 <th>操作</th>
               </tr>
             </thead>
             <tbody>
-              {property.tenants.map((t) => (
-                <tr key={t.id}>
-                  <td>{t.nameChinese}</td>
-                  <td>{t.nameEnglish}</td>
-                  <td>{t.phone}</td>
-                  <td>{t.passportOrHkid || '-'}</td>
+              {property.rooms.map((r) => (
+                <tr key={r.id}>
+                  <td>{r.name}</td>
+                  <td>${Number(r.monthlyRent).toLocaleString()}</td>
+                  <td>{r.tenants.length}</td>
+                  <td>{r._count.statements}</td>
                   <td>
-                    <Link href={`/properties/${id}/statements?tenantId=${t.id}`}>檢視租單</Link>
+                    <Link href={`/properties/${id}/rooms/${r.id}`}>檢視</Link>
                   </td>
                 </tr>
               ))}
@@ -102,12 +94,6 @@ export default async function PropertyDetailPage({
           </table>
         )}
       </div>
-
-      <div style={{ marginTop: '1.5rem' }}>
-        <Link href={`/properties/${id}/statements`} className="btn btn-primary">
-          租單管理
-        </Link>
-      </div>
-    </div>
+    </PageShell>
   );
 }

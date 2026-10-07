@@ -1,33 +1,31 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
+import { canAccessRoom } from '@/lib/access';
 
 export async function POST(request: NextRequest) {
   try {
     const session = await requireAuth();
     const formData = await request.formData();
-    const propertyId = formData.get('propertyId') as string;
+    const roomId = formData.get('roomId') as string;
     const nameChinese = formData.get('nameChinese') as string;
     const nameEnglish = formData.get('nameEnglish') as string;
     const phone = formData.get('phone') as string;
     const passportOrHkid = (formData.get('passportOrHkid') as string) || undefined;
 
-    if (!propertyId || !nameChinese || !nameEnglish || !phone) {
+    if (!roomId || !nameChinese || !nameEnglish || !phone) {
       return Response.json(
         { error: '請填寫必填欄位' },
         { status: 400 }
       );
     }
 
-    const owned = await prisma.propertyOwner.findFirst({
-      where: { propertyId, userId: session.id },
-    });
-    if (!owned && session.role !== 'ADMIN') {
+    if (!(await canAccessRoom(roomId, session))) {
       return Response.json({ error: '權限不足' }, { status: 403 });
     }
 
     await prisma.tenant.create({
-      data: { propertyId, nameChinese, nameEnglish, phone, passportOrHkid },
+      data: { roomId, nameChinese, nameEnglish, phone, passportOrHkid },
     });
     return Response.json({ success: true });
   } catch (err: unknown) {

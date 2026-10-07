@@ -1,19 +1,13 @@
 import Link from 'next/link';
-import { LogoutButton } from '@/components/LogoutButton';
 import { getSession } from '@/lib/auth';
 import { CreatePropertyForm } from '../CreatePropertyForm';
+import { PageShell } from '@/components/PageShell';
 
 export default async function NewPropertyPage() {
   const session = await getSession();
 
   return (
-    <div className="container" style={{ paddingTop: '2rem' }}>
-      <nav className="nav">
-        <Link href="/">首頁</Link>
-        <Link href="/properties">物業管理</Link>
-        {session?.role === 'ADMIN' && <Link href="/admin/users">用戶管理</Link>}
-        <LogoutButton />
-      </nav>
+    <PageShell role={session?.role}>
       <div style={{ marginTop: '1rem' }}>
         <Link href="/properties">← 返回物業列表</Link>
       </div>
@@ -23,6 +17,6 @@ export default async function NewPropertyPage() {
       <div className="card" style={{ marginTop: '1.5rem' }}>
         <CreatePropertyForm />
       </div>
-    </div>
+    </PageShell>
   );
 }

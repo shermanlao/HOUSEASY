@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
+import { canAccessRoom } from '@/lib/access';
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,14 +17,10 @@ export async function POST(request: NextRequest) {
 
     const stmt = await prisma.statement.findUnique({
       where: { id: statementId },
-      include: { property: true },
     });
     if (!stmt) return Response.json({ error: '租單不存在' }, { status: 404 });
 
-    const owned = await prisma.propertyOwner.findFirst({
-      where: { propertyId: stmt.propertyId, userId: session.id },
-    });
-    if (!owned && session.role !== 'ADMIN') {
+    if (!(await canAccessRoom(stmt.roomId, session))) {
       return Response.json({ error: '權限不足' }, { status: 403 });
     }
 

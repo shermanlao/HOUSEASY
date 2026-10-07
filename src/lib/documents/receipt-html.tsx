@@ -1,4 +1,4 @@
-import type { Receipt, Statement, Property, Tenant } from '@prisma/client';
+import type { Receipt, Statement, Property, Tenant, Room } from '@prisma/client';
 
 function num(n: unknown): number {
   if (typeof n === 'number') return n;
@@ -8,7 +8,7 @@ function num(n: unknown): number {
 
 type ReceiptWithRelations = Receipt & {
   statement: Statement & {
-    property: Property;
+    room: Room & { property: Property };
     tenant: Tenant;
   };
 };
@@ -36,7 +36,7 @@ export function renderReceiptHTML(receipt: ReceiptWithRelations): string {
 
   <table>
     <tr><th>姓名 Name</th><td>${s.tenant.nameChinese} ${s.tenant.nameEnglish}</td></tr>
-    <tr><th>地址 Address</th><td>${s.property.addressChinese}<br>${s.property.addressEnglish}</td></tr>
+    <tr><th>地址 Address</th><td>${s.room.property.addressChinese}<br>${s.room.property.addressEnglish} ${s.room.name}</td></tr>
     <tr><th>租金期數 Period</th><td>${new Date(s.periodStart).toLocaleDateString('zh-Hant')} 至 ${new Date(s.periodEnd).toLocaleDateString('zh-Hant')}</td></tr>
     <tr><th>繳款日期 Payment Date</th><td>${new Date(receipt.paymentDate).toLocaleDateString('zh-Hant')}</td></tr>
     <tr><th>收款金額 Amount Received</th><td>HK$${num(receipt.amountReceived).toFixed(2)}</td></tr>

@@ -1,4 +1,4 @@
-import type { Statement, Property, Tenant, Billing, Renting } from '@prisma/client';
+import type { Statement, Property, Tenant, Billing, Renting, Room } from '@prisma/client';
 
 function num(n: unknown): number {
   if (typeof n === 'number') return n;
@@ -7,7 +7,7 @@ function num(n: unknown): number {
 }
 
 type StatementWithRelations = Statement & {
-  property: Property;
+  room: Room & { property: Property };
   tenant: Tenant;
   billings: Billing[];
   rentings: Renting[];
@@ -16,7 +16,8 @@ type StatementWithRelations = Statement & {
 export function renderStatementHTML(stmt: StatementWithRelations): string {
   const billingTotal = stmt.billings.reduce((sum, b) => sum + num(b.qty) * num(b.unitRate), 0);
   const rentingBalance = stmt.rentings.reduce((sum, r) => sum + (num(r.paymentReceived) - num(r.openingBalance)), 0);
-  const totalDue = num(stmt.property.monthlyRent) + billingTotal - rentingBalance;
+  const monthlyRent = num(stmt.room.monthlyRent);
+  const totalDue = monthlyRent + billingTotal - rentingBalance;
 
   const elec = stmt.billings.find((b) => b.title.includes('電') || b.title.toLowerCase().includes('electric'));
   const water = stmt.billings.find((b) => b.title.includes('水') || b.title.toLowerCase().includes('water'));
@@ -67,7 +68,7 @@ export function renderStatementHTML(stmt: StatementWithRelations): string {
 
   <table>
     <tr><th>姓名 Name</th><td>${stmt.tenant.nameChinese} ${stmt.tenant.nameEnglish} ${stmt.tenant.phone}</td></tr>
-    <tr><th>地址 Address</th><td>${stmt.property.addressChinese}<br>${stmt.property.addressEnglish}</td></tr>
+    <tr><th>地址 Address</th><td>${stmt.room.property.addressChinese}<br>${stmt.room.property.addressEnglish} ${stmt.room.name}</td></tr>
   </table>
 
   ${elec ? `
@@ -122,7 +123,7 @@ export function renderStatementHTML(stmt: StatementWithRelations): string {
   `).join('') : ''}
 
   <div class="section-title">本月租金 Monthly Rent</div>
-  <p>HK$${num(stmt.property.monthlyRent).toLocaleString()}</p>
+  <p>HK$${monthlyRent.toLocaleString()}</p>
 
   ${stmt.rentings.length > 0 ? `
   <div class="section-title">上次繳款 Previous Payment</div>
@@ -139,7 +140,7 @@ export function renderStatementHTML(stmt: StatementWithRelations): string {
   </table>
   ` : ''}
 
-  <div class="total">合計 Total: HK$${(num(stmt.property.monthlyRent) + billingTotal).toFixed(2)}${rentingBalance !== 0 ? ` - $${rentingBalance.toFixed(2)}` : ''} = HK$${totalDue.toFixed(2)}</div>
+  <div class="total">合計 Total: HK$${(monthlyRent + billingTotal).toFixed(2)}${rentingBalance !== 0 ? ` - $${rentingBalance.toFixed(2)}` : ''} = HK$${totalDue.toFixed(2)}</div>
   <div class="note">總數金額 = 本月租金+電費+水費-上月結餘<br>Total Amount = Monthly Rent + Electricity Fee + Water Fee - Previous Balance</div>
 </body>
 </html>`;

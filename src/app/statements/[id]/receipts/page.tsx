@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import { LogoutButton } from '@/components/LogoutButton';
 import { notFound } from 'next/navigation';
 import { getSession } from '@/lib/auth';
 import { getStatement } from '@/actions/statement';
 import { AddReceiptForm } from './AddReceiptForm';
+import { PageShell } from '@/components/PageShell';
 
 function num(n: unknown): number {
   if (typeof n === 'number') return n;
@@ -21,28 +21,18 @@ export default async function ReceiptsPage({
   const stmt = await getStatement(id);
   if (!stmt) notFound();
 
-  const canEdit = true;
-
   return (
-    <div className="container" style={{ paddingTop: '2rem' }}>
-      <nav className="nav">
-        <Link href="/">首頁</Link>
-        <Link href="/properties">物業管理</Link>
-        {session?.role === 'ADMIN' && <Link href="/admin/users">用戶管理</Link>}
-        <LogoutButton />
-      </nav>
+    <PageShell role={session?.role} propertyId={stmt.room.propertyId}>
       <div style={{ marginTop: '1rem' }}>
         <Link href={`/statements/${id}`}>← 返回租單</Link>
       </div>
       <h1 style={{ marginTop: '1rem' }}>收據管理</h1>
       <p style={{ color: 'var(--muted)' }}>{stmt.tenant.nameChinese} - {new Date(stmt.periodStart).toLocaleDateString('zh-Hant')} 至 {new Date(stmt.periodEnd).toLocaleDateString('zh-Hant')}</p>
 
-      {canEdit && (
-        <div className="card" style={{ marginTop: '1.5rem' }}>
-          <h2 style={{ marginBottom: '1rem' }}>新增收據</h2>
-          <AddReceiptForm statementId={id} />
-        </div>
-      )}
+      <div className="card" style={{ marginTop: '1.5rem' }}>
+        <h2 style={{ marginBottom: '1rem' }}>新增收據</h2>
+        <AddReceiptForm statementId={id} />
+      </div>
 
       <div className="card" style={{ marginTop: '1.5rem' }}>
         <h2 style={{ marginBottom: '1rem' }}>收據列表</h2>
@@ -71,6 +61,6 @@ export default async function ReceiptsPage({
           </table>
         )}
       </div>
-    </div>
+    </PageShell>
   );
 }

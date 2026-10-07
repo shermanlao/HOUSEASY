@@ -9,9 +9,8 @@ export async function POST(request: NextRequest) {
     const name = (formData.get('name') as string) || '';
     const addressChinese = formData.get('addressChinese') as string;
     const addressEnglish = formData.get('addressEnglish') as string;
-    const monthlyRent = parseFloat(formData.get('monthlyRent') as string);
 
-    if (!addressChinese || !addressEnglish || isNaN(monthlyRent)) {
+    if (!addressChinese || !addressEnglish) {
       return Response.json(
         { error: '請填寫所有欄位' },
         { status: 400 }
@@ -23,7 +22,6 @@ export async function POST(request: NextRequest) {
         name,
         addressChinese,
         addressEnglish,
-        monthlyRent,
         owners: {
           create: { userId: session.id },
         },

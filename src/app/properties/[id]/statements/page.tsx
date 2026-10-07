@@ -1,33 +1,32 @@
 import Link from 'next/link';
-import { LogoutButton } from '@/components/LogoutButton';
 import { notFound } from 'next/navigation';
 import { getSession } from '@/lib/auth';
 import { getProperty } from '@/actions/property';
-import { getStatementsForProperty } from '@/actions/statement';
+import { getStatementsForUser } from '@/actions/statement';
+import { PageShell } from '@/components/PageShell';
+
 export default async function StatementsPage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ tenantId?: string }>;
+  searchParams: Promise<{ tenantId?: string; roomId?: string }>;
 }) {
   const { id } = await params;
-  const { tenantId } = await searchParams;
+  const { tenantId, roomId } = await searchParams;
   const session = await getSession();
   const property = await getProperty(id);
   if (!property) notFound();
 
-  const statements = await getStatementsForProperty(id, tenantId || undefined);
+  const statements = await getStatementsForUser({
+    propertyId: id,
+    tenantId: tenantId || undefined,
+    roomId: roomId || undefined,
+  });
   const canEdit = property.owners.some((o) => o.userId === session?.id) || session?.role === 'ADMIN';
 
   return (
-    <div className="container" style={{ paddingTop: '2rem' }}>
-      <nav className="nav">
-        <Link href="/">首頁</Link>
-        <Link href="/properties">物業管理</Link>
-        {session?.role === 'ADMIN' && <Link href="/admin/users">用戶管理</Link>}
-        <LogoutButton />
-      </nav>
+    <PageShell role={session?.role} propertyId={id}>
       <div style={{ marginTop: '1rem' }}>
         <Link href={`/properties/${id}`}>← 返回物業</Link>
       </div>
@@ -53,6 +52,7 @@ export default async function StatementsPage({
           <table className="table">
             <thead>
               <tr>
+                <th>房間</th>
                 <th>租客</th>
                 <th>開始日期</th>
                 <th>結束日期</th>
@@ -62,6 +62,7 @@ export default async function StatementsPage({
             <tbody>
               {statements.map((s) => (
                 <tr key={s.id}>
+                  <td>{s.room.name}</td>
                   <td>{s.tenant.nameChinese} {s.tenant.nameEnglish}</td>
                   <td>{new Date(s.periodStart).toLocaleDateString('zh-Hant')}</td>
                   <td>{new Date(s.periodEnd).toLocaleDateString('zh-Hant')}</td>
@@ -76,6 +77,6 @@ export default async function StatementsPage({
           </table>
         )}
       </div>
-    </div>
+    </PageShell>
   );
 }

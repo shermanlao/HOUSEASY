@@ -1,27 +1,30 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
+import { canAccessRoom } from '@/lib/access';
 
 export async function POST(request: NextRequest) {
   try {
     const session = await requireAuth();
     const body = await request.json();
-    const { propertyId, tenantId, periodStart, periodEnd, billings, rentings } = body;
+    const { roomId, tenantId, periodStart, periodEnd, billings, rentings } = body;
 
-    if (!propertyId || !tenantId || !periodStart || !periodEnd) {
+    if (!roomId || !tenantId || !periodStart || !periodEnd) {
       return Response.json({ error: '請填寫必填欄位' }, { status: 400 });
     }
 
-    const owned = await prisma.propertyOwner.findFirst({
-      where: { propertyId, userId: session.id },
-    });
-    if (!owned && session.role !== 'ADMIN') {
+    if (!(await canAccessRoom(roomId, session))) {
       return Response.json({ error: '權限不足' }, { status: 403 });
+    }
+
+    const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+    if (!tenant || tenant.roomId !== roomId) {
+      return Response.json({ error: '租客不屬於此房間' }, { status: 400 });
     }
 
     await prisma.statement.create({
       data: {
-        propertyId,
+        roomId,
         tenantId,
         periodStart: new Date(periodStart),
         periodEnd: new Date(periodEnd),

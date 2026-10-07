@@ -2,17 +2,24 @@
 
 import { prisma } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
+import { canAccessProperty } from '@/lib/access';
+
+const propertyListInclude = {
+  rooms: {
+    include: {
+      tenants: true,
+      _count: { select: { statements: true } },
+    },
+  },
+  _count: { select: { rooms: true } },
+} as const;
 
 export async function getPropertiesForUser() {
   const session = await requireAuth();
-  const include = {
-    tenants: true,
-    _count: { select: { statements: true } },
-  } as const;
 
   if (session.role === 'ADMIN') {
     return prisma.property.findMany({
-      include,
+      include: propertyListInclude,
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -20,7 +27,7 @@ export async function getPropertiesForUser() {
   const owners = await prisma.propertyOwner.findMany({
     where: { userId: session.id },
     include: {
-      property: { include },
+      property: { include: propertyListInclude },
     },
   });
   return owners.map((o) => o.property);
@@ -31,9 +38,8 @@ export async function createProperty(formData: FormData) {
   const name = (formData.get('name') as string) || '';
   const addressChinese = formData.get('addressChinese') as string;
   const addressEnglish = formData.get('addressEnglish') as string;
-  const monthlyRent = parseFloat(formData.get('monthlyRent') as string);
 
-  if (!addressChinese || !addressEnglish || isNaN(monthlyRent)) {
+  if (!addressChinese || !addressEnglish) {
     return { error: '請填寫所有欄位' };
   }
 
@@ -42,7 +48,6 @@ export async function createProperty(formData: FormData) {
       name,
       addressChinese,
       addressEnglish,
-      monthlyRent,
       owners: {
         create: { userId: session.id },
       },
@@ -65,7 +70,13 @@ export async function getProperty(id: string) {
     where: { id },
     include: {
       owners: { include: { user: { select: { id: true, name: true, email: true } } } },
-      tenants: true,
+      rooms: {
+        include: {
+          tenants: true,
+          _count: { select: { statements: true } },
+        },
+        orderBy: { createdAt: 'asc' },
+      },
     },
   });
   if (!property) return null;
@@ -76,20 +87,16 @@ export async function getProperty(id: string) {
 
 export async function updateProperty(
   id: string,
-  data: { addressChinese?: string; addressEnglish?: string; monthlyRent?: number }
+  data: { addressChinese?: string; addressEnglish?: string }
 ) {
   const session = await requireAuth();
-  const owned = await prisma.propertyOwner.findFirst({
-    where: { propertyId: id, userId: session.id },
-  });
-  if (!owned) return { error: '權限不足' };
+  if (!(await canAccessProperty(id, session))) return { error: '權限不足' };
 
   await prisma.property.update({
     where: { id },
     data: {
       ...(data.addressChinese != null && { addressChinese: data.addressChinese }),
       ...(data.addressEnglish != null && { addressEnglish: data.addressEnglish }),
-      ...(data.monthlyRent != null && { monthlyRent: data.monthlyRent }),
     },
   });
   return { success: true };

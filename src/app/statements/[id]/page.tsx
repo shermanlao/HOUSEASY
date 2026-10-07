@@ -1,8 +1,8 @@
 import Link from 'next/link';
-import { LogoutButton } from '@/components/LogoutButton';
 import { notFound } from 'next/navigation';
 import { getSession } from '@/lib/auth';
 import { getStatement } from '@/actions/statement';
+import { PageShell } from '@/components/PageShell';
 
 function num(n: unknown): number {
   if (typeof n === 'number') return n;
@@ -22,23 +22,19 @@ export default async function StatementDetailPage({
 
   const billingTotal = stmt.billings.reduce((sum, b) => sum + num(b.qty) * num(b.unitRate), 0);
   const rentingBalance = stmt.rentings.reduce((sum, r) => sum + (num(r.paymentReceived) - num(r.openingBalance)), 0);
-  const totalDue = num(stmt.property.monthlyRent) + billingTotal - rentingBalance;
+  const monthlyRent = num(stmt.room.monthlyRent);
+  const totalDue = monthlyRent + billingTotal - rentingBalance;
 
   return (
-    <div className="container" style={{ paddingTop: '2rem' }}>
-      <nav className="nav">
-        <Link href="/">首頁</Link>
-        <Link href="/properties">物業管理</Link>
-        {session?.role === 'ADMIN' && <Link href="/admin/users">用戶管理</Link>}
-        <LogoutButton />
-      </nav>
+    <PageShell role={session?.role} propertyId={stmt.room.propertyId}>
       <div style={{ marginTop: '1rem' }}>
-        <Link href={`/properties/${stmt.propertyId}/statements`}>← 返回租單列表</Link>
+        <Link href={`/properties/${stmt.room.propertyId}/statements`}>← 返回租單列表</Link>
       </div>
       <h1 style={{ marginTop: '1rem' }}>租單詳情</h1>
 
       <div className="card" style={{ marginTop: '1rem' }}>
-        <p><strong>物業：</strong>{stmt.property.addressChinese}</p>
+        <p><strong>物業：</strong>{stmt.room.property.addressChinese}</p>
+        <p><strong>房間：</strong>{stmt.room.name}</p>
         <p><strong>租客：</strong>{stmt.tenant.nameChinese} {stmt.tenant.nameEnglish} {stmt.tenant.phone}</p>
         <p><strong>期數：</strong>
           {new Date(stmt.periodStart).toLocaleDateString('zh-Hant')} 至 {new Date(stmt.periodEnd).toLocaleDateString('zh-Hant')}
@@ -70,7 +66,7 @@ export default async function StatementDetailPage({
           </tbody>
         </table>
 
-        <p style={{ marginTop: '0.5rem' }}><strong>月租：</strong>${num(stmt.property.monthlyRent).toLocaleString()}</p>
+        <p style={{ marginTop: '0.5rem' }}><strong>月租：</strong>${monthlyRent.toLocaleString()}</p>
 
         {stmt.rentings.length > 0 && (
           <>
@@ -109,6 +105,6 @@ export default async function StatementDetailPage({
           收據管理
         </Link>
       </div>
-    </div>
+    </PageShell>
   );
 }

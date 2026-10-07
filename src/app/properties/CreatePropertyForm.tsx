@@ -54,17 +54,6 @@ export function CreatePropertyForm() {
         <label htmlFor="addressEnglish">地址（英文）</label>
         <input id="addressEnglish" name="addressEnglish" type="text" required />
       </div>
-      <div className="form-group">
-        <label htmlFor="monthlyRent">月租（港元）</label>
-        <input
-          id="monthlyRent"
-          name="monthlyRent"
-          type="number"
-          step="0.01"
-          min="0"
-          required
-        />
-      </div>
       <button type="submit" className="btn btn-primary">
         新增物業
       </button>

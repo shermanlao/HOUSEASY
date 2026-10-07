@@ -1,10 +1,9 @@
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
 import { getSession } from '@/lib/auth';
 import { getUsers } from '@/actions/admin';
 import { AddUserForm } from './AddUserForm';
 import { UsersList } from './UsersList';
-import { LogoutButton } from '@/components/LogoutButton';
+import { PageShell } from '@/components/PageShell';
 
 export default async function AdminUsersPage() {
   const session = await getSession();
@@ -18,12 +17,7 @@ export default async function AdminUsersPage() {
   }));
 
   return (
-    <div className="container" style={{ paddingTop: '2rem' }}>
-      <nav className="nav">
-        <Link href="/properties">物業管理</Link>
-        <Link href="/admin/users">用戶管理</Link>
-        <LogoutButton />
-      </nav>
+    <PageShell role={session.role}>
       <h1 style={{ marginTop: '1.5rem' }}>用戶管理</h1>
 
       <div className="card" style={{ marginTop: '1.5rem' }}>
@@ -38,6 +32,6 @@ export default async function AdminUsersPage() {
         </p>
         <UsersList users={rows} currentUserId={session.id} />
       </div>
-    </div>
+    </PageShell>
   );
 }

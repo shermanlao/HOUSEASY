@@ -23,6 +23,8 @@ Separate site from levolight.com on the same VPS (`187.7.21.12`).
 DATABASE_URL="postgresql://houseasy:PASSWORD@127.0.0.1:5432/houseasy?schema=public"
 JWT_SECRET="long-random-string"
 COOKIE_SECURE="true"
+SEARCH_ADMIN_TOKEN="shared-secret-with-search-app"
+SEARCH_API_URL="http://127.0.0.1:3001"
 PORT=3002
 HOSTNAME=127.0.0.1
 NODE_ENV=production
@@ -37,6 +39,8 @@ DATABASE_URL="file:./prod.db"
 PORT=3001
 HOSTNAME=127.0.0.1
 NODE_ENV=production
+JWT_SECRET="same-as-rental-app"
+SEARCH_ADMIN_TOKEN="shared-secret-with-rental-app"
 ```
 
 ## Nginx (HTTPS)

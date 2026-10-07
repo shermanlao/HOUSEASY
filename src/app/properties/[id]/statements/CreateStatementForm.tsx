@@ -1,18 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { withBasePath } from '@/lib/base-path';
 
-type Property = {
+type RoomOption = {
   id: string;
-  monthlyRent: { toString: () => string };
+  name: string;
+  propertyId: string;
+  propertyName?: string;
+  monthlyRent: number;
   tenants: { id: string; nameChinese: string; nameEnglish: string }[];
 };
 
-export function CreateStatementForm({ property }: { property: Property }) {
+export function CreateStatementForm({
+  rooms,
+  defaultRoomId,
+  returnTo,
+}: {
+  rooms: RoomOption[];
+  defaultRoomId?: string;
+  returnTo?: string;
+}) {
   const router = useRouter();
   const [error, setError] = useState('');
+  const [roomId, setRoomId] = useState(defaultRoomId || rooms[0]?.id || '');
   const [billings, setBillings] = useState([
     { title: '電費', qty: 0, unitRate: 1.8, lastReading: 0, thisReading: 0, issueDate: '' },
     { title: '水費', qty: 0, unitRate: 16, lastReading: 0, thisReading: 0, issueDate: '' },
@@ -23,6 +35,11 @@ export function CreateStatementForm({ property }: { property: Property }) {
     paymentReceived: 0,
   });
 
+  const selectedRoom = useMemo(
+    () => rooms.find((r) => r.id === roomId),
+    [rooms, roomId]
+  );
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError('');
@@ -31,7 +48,7 @@ export function CreateStatementForm({ property }: { property: Property }) {
     const periodStart = (form.querySelector('[name="periodStart"]') as HTMLInputElement)?.value;
     const periodEnd = (form.querySelector('[name="periodEnd"]') as HTMLInputElement)?.value;
 
-    if (!tenantId || !periodStart || !periodEnd) {
+    if (!roomId || !tenantId || !periodStart || !periodEnd) {
       setError('請填寫所有必填欄位');
       return;
     }
@@ -53,7 +70,7 @@ export function CreateStatementForm({ property }: { property: Property }) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        propertyId: property.id,
+        roomId,
         tenantId,
         periodStart,
         periodEnd,
@@ -68,7 +85,7 @@ export function CreateStatementForm({ property }: { property: Property }) {
       setError(data.error || '新增失敗');
       return;
     }
-    router.push(`/properties/${property.id}/statements`);
+    router.push(returnTo || `/properties/${selectedRoom?.propertyId || ''}/statements`);
     router.refresh();
   }
 
@@ -80,16 +97,37 @@ export function CreateStatementForm({ property }: { property: Property }) {
         </div>
       )}
       <div className="form-group">
-        <label>租客 *</label>
-        <select name="tenantId" required>
+        <label>房間 *</label>
+        <select
+          name="roomId"
+          required
+          value={roomId}
+          onChange={(e) => setRoomId(e.target.value)}
+        >
           <option value="">請選擇</option>
-          {property.tenants.map((t) => (
+          {rooms.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.propertyName ? `${r.propertyName} / ${r.name}` : r.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="form-group">
+        <label>租客 *</label>
+        <select name="tenantId" required key={roomId}>
+          <option value="">請選擇</option>
+          {(selectedRoom?.tenants || []).map((t) => (
             <option key={t.id} value={t.id}>
               {t.nameChinese} {t.nameEnglish}
             </option>
           ))}
         </select>
       </div>
+      {selectedRoom && (
+        <p style={{ color: 'var(--muted)', marginBottom: '1rem' }}>
+          月租：${Number(selectedRoom.monthlyRent).toLocaleString()}
+        </p>
+      )}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
         <div className="form-group">
           <label>開始日期 *</label>
