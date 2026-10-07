@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth';
 import * as bcrypt from 'bcryptjs';
-import { updateUser } from '@/actions/admin';
+import { deleteUser, updateUser } from '@/actions/admin';
 
 export async function POST(request: NextRequest) {
   try {
@@ -69,5 +69,28 @@ export async function PATCH(request: NextRequest) {
     }
     console.error(err);
     return Response.json({ error: '更新失敗' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    await requireAdmin();
+    const body = await request.json();
+    const result = await deleteUser(body.id);
+    if (result.error) {
+      return Response.json({ error: result.error }, { status: 400 });
+    }
+    return Response.json({ success: true });
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      if (err.message === 'UNAUTHORIZED') {
+        return Response.json({ error: '請先登入' }, { status: 401 });
+      }
+      if (err.message === 'FORBIDDEN') {
+        return Response.json({ error: '權限不足' }, { status: 403 });
+      }
+    }
+    console.error(err);
+    return Response.json({ error: '刪除失敗' }, { status: 500 });
   }
 }

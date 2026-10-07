@@ -80,3 +80,28 @@ export async function updateUser(data: {
   await prisma.user.update({ where: { id }, data: updateData });
   return { success: true };
 }
+
+export async function deleteUser(id: string) {
+  const session = await requireAdmin();
+  if (!id) {
+    return { error: '用戶不存在' };
+  }
+  if (id === session.id) {
+    return { error: '不能刪除目前登入的帳號' };
+  }
+
+  const existing = await prisma.user.findUnique({ where: { id } });
+  if (!existing) {
+    return { error: '用戶不存在' };
+  }
+
+  if (existing.role === 'ADMIN') {
+    const adminCount = await prisma.user.count({ where: { role: 'ADMIN' } });
+    if (adminCount <= 1) {
+      return { error: '不能刪除最後一位管理員' };
+    }
+  }
+
+  await prisma.user.delete({ where: { id } });
+  return { success: true };
+}

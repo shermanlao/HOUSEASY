@@ -34,9 +34,9 @@ export default async function AdminUsersPage() {
       <div className="card" style={{ marginTop: '1.5rem' }}>
         <h2 style={{ marginBottom: '1rem' }}>用戶列表</h2>
         <p style={{ fontSize: '0.875rem', color: 'var(--muted)', marginBottom: '0.75rem' }}>
-          點擊列以編輯用戶
+          點擊列以編輯用戶，或按刪除移除用戶
         </p>
-        <UsersList users={rows} />
+        <UsersList users={rows} currentUserId={session.id} />
       </div>
     </div>
   );

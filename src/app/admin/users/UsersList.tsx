@@ -12,11 +12,39 @@ export type AdminUserRow = {
   createdAt: string | Date;
 };
 
-export function UsersList({ users }: { users: AdminUserRow[] }) {
+export function UsersList({
+  users,
+  currentUserId,
+}: {
+  users: AdminUserRow[];
+  currentUserId: string;
+}) {
   const router = useRouter();
   const [editing, setEditing] = useState<AdminUserRow | null>(null);
   const [error, setError] = useState('');
+  const [listError, setListError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  async function handleDelete(user: AdminUserRow) {
+    setListError('');
+    const ok = window.confirm(`確定刪除用戶 ${user.name}（${user.email}）？此操作無法復原。`);
+    if (!ok) return;
+    setDeletingId(user.id);
+    const res = await fetch(withBasePath('/api/admin/users'), {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: user.id }),
+    });
+    const data = await res.json();
+    setDeletingId(null);
+    if (!res.ok) {
+      setListError(data.error || '刪除失敗');
+      return;
+    }
+    if (editing?.id === user.id) setEditing(null);
+    router.refresh();
+  }
 
   async function handleSave(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -49,6 +77,19 @@ export function UsersList({ users }: { users: AdminUserRow[] }) {
 
   return (
     <>
+      {listError && (
+        <div
+          style={{
+            padding: '0.5rem',
+            marginBottom: '0.75rem',
+            background: '#fef2f2',
+            color: 'var(--error)',
+            borderRadius: '6px',
+          }}
+        >
+          {listError}
+        </div>
+      )}
       <table className="table">
         <thead>
           <tr>
@@ -56,25 +97,44 @@ export function UsersList({ users }: { users: AdminUserRow[] }) {
             <th>姓名</th>
             <th>角色</th>
             <th>建立時間</th>
+            <th>操作</th>
           </tr>
         </thead>
         <tbody>
-          {users.map((u) => (
-            <tr
-              key={u.id}
-              onClick={() => {
-                setError('');
-                setEditing(u);
-              }}
-              style={{ cursor: 'pointer' }}
-              title="點擊編輯"
-            >
-              <td style={{ color: 'var(--primary)' }}>{u.email}</td>
-              <td>{u.name}</td>
-              <td>{u.role === 'ADMIN' ? '管理員' : '業主'}</td>
-              <td>{new Date(u.createdAt).toLocaleDateString('zh-Hant')}</td>
-            </tr>
-          ))}
+          {users.map((u) => {
+            const isSelf = u.id === currentUserId;
+            return (
+              <tr
+                key={u.id}
+                onClick={() => {
+                  setError('');
+                  setEditing(u);
+                }}
+                style={{ cursor: 'pointer' }}
+                title="點擊編輯"
+              >
+                <td style={{ color: 'var(--primary)' }}>{u.email}</td>
+                <td>{u.name}</td>
+                <td>{u.role === 'ADMIN' ? '管理員' : '業主'}</td>
+                <td>{new Date(u.createdAt).toLocaleDateString('zh-Hant')}</td>
+                <td>
+                  <button
+                    type="button"
+                    className="btn btn-danger"
+                    style={{ padding: '0.25rem 0.65rem' }}
+                    disabled={isSelf || deletingId === u.id}
+                    title={isSelf ? '不能刪除目前登入的帳號' : '刪除此用戶'}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void handleDelete(u);
+                    }}
+                  >
+                    {deletingId === u.id ? '刪除中…' : '刪除'}
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 
