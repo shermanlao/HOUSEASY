@@ -11,6 +11,8 @@
 - 最近同步紀錄
 - 同步 28Hse / Squarefoot / 中原 Open Data，或全部同步
 
+Squarefoot 從目前 VPS 會被 Cloudflare 回 403（資料中心 IP）。28Hse 與中原不受影響；全部同步時會略過 Squarefoot 並顯示警告。
+
 非管理員無法進入。未設定 `SEARCH_ADMIN_TOKEN` 時頁面會顯示錯誤。
 
 ## 環境變數

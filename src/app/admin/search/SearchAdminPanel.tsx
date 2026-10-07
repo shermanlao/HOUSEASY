@@ -33,6 +33,7 @@ function formatTime(value: string | null | undefined) {
 export function SearchAdminPanel() {
   const [status, setStatus] = useState<SearchStatus | null>(null);
   const [error, setError] = useState('');
+  const [warning, setWarning] = useState('');
   const [loading, setLoading] = useState(true);
   const [syncingSource, setSyncingSource] = useState<string | null>(null);
 
@@ -62,6 +63,7 @@ export function SearchAdminPanel() {
 
   async function runSync(source: string) {
     setError('');
+    setWarning('');
     setSyncingSource(source);
     try {
       const res = await fetch(withBasePath('/api/admin/search/sync'), {
@@ -73,6 +75,9 @@ export function SearchAdminPanel() {
       if (!res.ok) {
         setError(data.error || '同步失敗');
         return;
+      }
+      if (Array.isArray(data.warnings) && data.warnings.length) {
+        setWarning(data.warnings.join(' '));
       }
       await load();
     } finally {
@@ -96,6 +101,19 @@ export function SearchAdminPanel() {
           }}
         >
           {error}
+        </div>
+      )}
+      {warning && (
+        <div
+          style={{
+            padding: '0.5rem',
+            marginBottom: '1rem',
+            background: '#fffbeb',
+            color: '#92400e',
+            borderRadius: '6px',
+          }}
+        >
+          {warning}
         </div>
       )}
 
