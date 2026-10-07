@@ -4,9 +4,16 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { withBasePath } from '@/lib/base-path';
 
-export function AddReceiptForm({ statementId }: { statementId: string }) {
+export function AddReceiptForm({
+  statementId,
+  receipt,
+}: {
+  statementId: string;
+  receipt?: { id: string; paymentDate: string; amountReceived: number };
+}) {
   const router = useRouter();
   const [error, setError] = useState('');
+  const editing = Boolean(receipt);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -14,16 +21,21 @@ export function AddReceiptForm({ statementId }: { statementId: string }) {
     const form = e.currentTarget;
     const formData = new FormData(form);
     formData.set('statementId', statementId);
+    if (receipt) formData.set('id', receipt.id);
     const res = await fetch(withBasePath('/api/receipts'), {
-      method: 'POST',
+      method: editing ? 'PATCH' : 'POST',
       body: formData,
     });
     const data = await res.json();
     if (!res.ok) {
-      setError(data.error || '新增失敗');
+      setError(data.error || (editing ? '更新失敗' : '新增失敗'));
       return;
     }
-    form.reset();
+    if (editing) {
+      router.push(`/statements/${statementId}/receipts`);
+    } else {
+      form.reset();
+    }
     router.refresh();
   }
 
@@ -36,13 +48,20 @@ export function AddReceiptForm({ statementId }: { statementId: string }) {
       )}
       <div className="form-group">
         <label>繳款日期 *</label>
-        <input name="paymentDate" type="date" required />
+        <input name="paymentDate" type="date" required defaultValue={receipt?.paymentDate || ''} />
       </div>
       <div className="form-group">
         <label>收款金額 *</label>
-        <input name="amountReceived" type="number" step="0.01" min="0" required />
+        <input
+          name="amountReceived"
+          type="number"
+          step="0.01"
+          min="0"
+          required
+          defaultValue={receipt ? String(receipt.amountReceived) : ''}
+        />
       </div>
-      <button type="submit" className="btn btn-primary">新增收據</button>
+      <button type="submit" className="btn btn-primary">{editing ? '儲存' : '新增收據'}</button>
     </form>
   );
 }

@@ -55,6 +55,8 @@ export default async function PropertyRoomsPage({
                   <td>
                     <Link href={`/properties/${id}/rooms/${r.id}`}>檢視</Link>
                     {' | '}
+                    <Link href={`/properties/${id}/rooms/${r.id}/edit`}>編輯</Link>
+                    {' | '}
                     <Link href={`/properties/${id}/statements?roomId=${r.id}`}>檢視租單</Link>
                   </td>
                 </tr>

@@ -69,6 +69,8 @@ export default async function StatementsPage({
                   <td>
                     <Link href={`/statements/${s.id}`}>檢視</Link>
                     {' | '}
+                    <Link href={`/statements/${s.id}/edit`}>編輯</Link>
+                    {' | '}
                     <Link href={`/statements/${s.id}/print`} target="_blank">列印租單</Link>
                   </td>
                 </tr>

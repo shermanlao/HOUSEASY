@@ -97,8 +97,11 @@ export default async function StatementDetailPage({
         <p style={{ marginTop: '1rem', fontWeight: 600 }}>合計需繳：${totalDue.toFixed(2)}</p>
       </div>
 
-      <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem' }}>
-        <Link href={`/statements/${id}/print`} className="btn btn-primary" target="_blank">
+      <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+        <Link href={`/statements/${id}/edit`} className="btn btn-primary">
+          編輯租單
+        </Link>
+        <Link href={`/statements/${id}/print`} className="btn btn-secondary" target="_blank">
           列印租單
         </Link>
         <Link href={`/statements/${id}/receipts`} className="btn btn-secondary">

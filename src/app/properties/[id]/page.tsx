@@ -26,7 +26,14 @@ export default async function PropertyDetailPage({
       </div>
 
       <div className="card" style={{ marginTop: '1rem' }}>
-        <h1>物業詳情</h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <h1 style={{ margin: 0 }}>物業詳情</h1>
+          {canEdit && (
+            <Link href={`/properties/${id}/edit`} className="btn btn-primary">
+              編輯物業
+            </Link>
+          )}
+        </div>
         <table className="table" style={{ marginTop: '1rem' }}>
           <tbody>
             {property.name && (
@@ -87,6 +94,8 @@ export default async function PropertyDetailPage({
                   <td>{r._count.statements}</td>
                   <td>
                     <Link href={`/properties/${id}/rooms/${r.id}`}>檢視</Link>
+                    {' | '}
+                    <Link href={`/properties/${id}/rooms/${r.id}/edit`}>編輯</Link>
                   </td>
                 </tr>
               ))}

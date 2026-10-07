@@ -50,6 +50,8 @@ export default async function PropertiesPage() {
                     <td>{statementCount}</td>
                     <td>
                       <Link href={`/properties/${p.id}`}>檢視</Link>
+                      {' | '}
+                      <Link href={`/properties/${p.id}/edit`}>編輯</Link>
                     </td>
                   </tr>
                 );

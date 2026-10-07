@@ -114,3 +114,60 @@ export async function createStatement(data: {
   });
   return { success: true };
 }
+
+export async function updateStatement(
+  id: string,
+  data: {
+    roomId: string;
+    tenantId: string;
+    periodStart: Date;
+    periodEnd: Date;
+    billings: BillingInput[];
+    rentings: RentingInput[];
+  }
+) {
+  const session = await requireAuth();
+  const stmt = await prisma.statement.findUnique({ where: { id } });
+  if (!stmt) return { error: '租單不存在' };
+  if (!(await canAccessRoom(stmt.roomId, session))) return { error: '權限不足' };
+  if (!(await canAccessRoom(data.roomId, session))) return { error: '權限不足' };
+
+  const tenant = await prisma.tenant.findUnique({ where: { id: data.tenantId } });
+  if (!tenant || tenant.roomId !== data.roomId) {
+    return { error: '租客不屬於此房間' };
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.billing.deleteMany({ where: { statementId: id } });
+    await tx.renting.deleteMany({ where: { statementId: id } });
+    await tx.statement.update({
+      where: { id },
+      data: {
+        roomId: data.roomId,
+        tenantId: data.tenantId,
+        periodStart: data.periodStart,
+        periodEnd: data.periodEnd,
+        billings: {
+          create: data.billings.map((b) => ({
+            issueDate: b.issueDate,
+            title: b.title,
+            qty: b.qty,
+            unitRate: b.unitRate,
+            lastReading: b.lastReading,
+            thisReading: b.thisReading,
+            placement: b.placement,
+          })),
+        },
+        rentings: {
+          create: data.rentings.map((r) => ({
+            lastPaymentDate: r.lastPaymentDate,
+            openingBalance: r.openingBalance,
+            paymentReceived: r.paymentReceived,
+            placement: r.placement,
+          })),
+        },
+      },
+    });
+  });
+  return { success: true };
+}

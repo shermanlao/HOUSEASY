@@ -38,6 +38,8 @@ export default async function RoomsPage() {
                   <td>{r._count.statements}</td>
                   <td>
                     <Link href={`/properties/${r.propertyId}/rooms/${r.id}`}>檢視</Link>
+                    {' | '}
+                    <Link href={`/properties/${r.propertyId}/rooms/${r.id}/edit`}>編輯</Link>
                   </td>
                 </tr>
               ))}

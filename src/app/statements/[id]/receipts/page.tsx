@@ -53,6 +53,8 @@ export default async function ReceiptsPage({
                   <td>{new Date(r.paymentDate).toLocaleDateString('zh-Hant')}</td>
                   <td>${num(r.amountReceived).toFixed(2)}</td>
                   <td>
+                    <Link href={`/receipts/${r.id}/edit`}>編輯</Link>
+                    {' | '}
                     <Link href={`/receipts/${r.id}/print`} target="_blank" rel="noopener">列印收據</Link>
                   </td>
                 </tr>

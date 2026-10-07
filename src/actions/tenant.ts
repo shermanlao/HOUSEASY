@@ -27,9 +27,41 @@ export async function createTenant(formData: FormData) {
 }
 
 export async function getTenant(id: string) {
-  await requireAuth();
-  return prisma.tenant.findUnique({
+  const session = await requireAuth();
+  const tenant = await prisma.tenant.findUnique({
     where: { id },
     include: { room: { include: { property: true } } },
   });
+  if (!tenant) return null;
+  if (!(await canAccessRoom(tenant.roomId, session))) return null;
+  return tenant;
+}
+
+export async function updateTenant(
+  id: string,
+  data: {
+    nameChinese: string;
+    nameEnglish: string;
+    phone: string;
+    passportOrHkid?: string;
+  }
+) {
+  const session = await requireAuth();
+  const tenant = await prisma.tenant.findUnique({ where: { id } });
+  if (!tenant) return { error: '租客不存在' };
+  if (!(await canAccessRoom(tenant.roomId, session))) return { error: '權限不足' };
+  if (!data.nameChinese || !data.nameEnglish || !data.phone) {
+    return { error: '請填寫必填欄位' };
+  }
+
+  await prisma.tenant.update({
+    where: { id },
+    data: {
+      nameChinese: data.nameChinese,
+      nameEnglish: data.nameEnglish,
+      phone: data.phone,
+      passportOrHkid: data.passportOrHkid || null,
+    },
+  });
+  return { success: true };
 }

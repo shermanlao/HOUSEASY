@@ -24,7 +24,14 @@ export default async function RoomDetailPage({
       </div>
 
       <div className="card" style={{ marginTop: '1rem' }}>
-        <h1>房間詳情</h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <h1 style={{ margin: 0 }}>房間詳情</h1>
+          {canEdit && (
+            <Link href={`/properties/${id}/rooms/${roomId}/edit`} className="btn btn-primary">
+              編輯房間
+            </Link>
+          )}
+        </div>
         <table className="table" style={{ marginTop: '1rem' }}>
           <tbody>
             <tr>
@@ -67,6 +74,8 @@ export default async function RoomDetailPage({
                   <td>{t.phone}</td>
                   <td>{t.passportOrHkid || '-'}</td>
                   <td>
+                    <Link href={`/tenants/${t.id}/edit`}>編輯</Link>
+                    {' | '}
                     <Link href={`/properties/${id}/statements?tenantId=${t.id}`}>檢視租單</Link>
                   </td>
                 </tr>

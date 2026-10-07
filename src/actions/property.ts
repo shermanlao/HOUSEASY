@@ -87,7 +87,7 @@ export async function getProperty(id: string) {
 
 export async function updateProperty(
   id: string,
-  data: { addressChinese?: string; addressEnglish?: string }
+  data: { name?: string; addressChinese?: string; addressEnglish?: string }
 ) {
   const session = await requireAuth();
   if (!(await canAccessProperty(id, session))) return { error: '權限不足' };
@@ -95,6 +95,7 @@ export async function updateProperty(
   await prisma.property.update({
     where: { id },
     data: {
+      ...(data.name != null && { name: data.name }),
       ...(data.addressChinese != null && { addressChinese: data.addressChinese }),
       ...(data.addressEnglish != null && { addressEnglish: data.addressEnglish }),
     },

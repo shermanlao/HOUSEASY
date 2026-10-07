@@ -40,3 +40,41 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: '新增失敗' }, { status: 500 });
   }
 }
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const session = await requireAuth();
+    const formData = await request.formData();
+    const id = formData.get('id') as string;
+    const paymentDate = formData.get('paymentDate') as string;
+    const amountReceived = parseFloat(formData.get('amountReceived') as string);
+
+    if (!id || !paymentDate || isNaN(amountReceived)) {
+      return Response.json({ error: '請填寫所有欄位' }, { status: 400 });
+    }
+
+    const receipt = await prisma.receipt.findUnique({
+      where: { id },
+      include: { statement: true },
+    });
+    if (!receipt) return Response.json({ error: '收據不存在' }, { status: 404 });
+    if (!(await canAccessRoom(receipt.statement.roomId, session))) {
+      return Response.json({ error: '權限不足' }, { status: 403 });
+    }
+
+    await prisma.receipt.update({
+      where: { id },
+      data: {
+        paymentDate: new Date(paymentDate),
+        amountReceived,
+      },
+    });
+    return Response.json({ success: true });
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message === 'UNAUTHORIZED') {
+      return Response.json({ error: '請先登入' }, { status: 401 });
+    }
+    console.error(err);
+    return Response.json({ error: '更新失敗' }, { status: 500 });
+  }
+}

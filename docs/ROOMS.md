@@ -9,6 +9,8 @@
 | `/rental/rooms` | 目前使用者可存取的全部房間 |
 | `/rental/properties/[id]/rooms` | 該物業的房間列表與新增 |
 | `/rental/properties/[id]/rooms/[roomId]` | 房間詳情與租客 |
+| `/rental/properties/[id]/rooms/[roomId]/edit` | 編輯房間名稱與月租 |
+| `/rental/tenants/[id]/edit` | 編輯租客（從房間詳情進入） |
 
 頂部導覽「房間管理」：在物業頁內連到該物業的房間；其他頁連到全站房間列表。
 

@@ -13,27 +13,54 @@ type RoomOption = {
   tenants: { id: string; nameChinese: string; nameEnglish: string }[];
 };
 
+type BillingRow = {
+  title: string;
+  qty: number;
+  unitRate: number;
+  lastReading: number;
+  thisReading: number;
+  issueDate: string;
+};
+
 export function CreateStatementForm({
   rooms,
   defaultRoomId,
   returnTo,
+  statement,
 }: {
   rooms: RoomOption[];
   defaultRoomId?: string;
   returnTo?: string;
+  statement?: {
+    id: string;
+    roomId: string;
+    tenantId: string;
+    periodStart: string;
+    periodEnd: string;
+    billings: BillingRow[];
+    renting: { lastPaymentDate: string; openingBalance: number; paymentReceived: number };
+  };
 }) {
   const router = useRouter();
   const [error, setError] = useState('');
-  const [roomId, setRoomId] = useState(defaultRoomId || rooms[0]?.id || '');
-  const [billings, setBillings] = useState([
-    { title: '電費', qty: 0, unitRate: 1.8, lastReading: 0, thisReading: 0, issueDate: '' },
-    { title: '水費', qty: 0, unitRate: 16, lastReading: 0, thisReading: 0, issueDate: '' },
-  ]);
-  const [renting, setRenting] = useState({
-    lastPaymentDate: '',
-    openingBalance: 0,
-    paymentReceived: 0,
-  });
+  const editing = Boolean(statement);
+  const [roomId, setRoomId] = useState(statement?.roomId || defaultRoomId || rooms[0]?.id || '');
+  const [tenantId, setTenantId] = useState(statement?.tenantId || '');
+  const [billings, setBillings] = useState<BillingRow[]>(
+    statement?.billings?.length
+      ? statement.billings
+      : [
+          { title: '電費', qty: 0, unitRate: 1.8, lastReading: 0, thisReading: 0, issueDate: '' },
+          { title: '水費', qty: 0, unitRate: 16, lastReading: 0, thisReading: 0, issueDate: '' },
+        ]
+  );
+  const [renting, setRenting] = useState(
+    statement?.renting || {
+      lastPaymentDate: '',
+      openingBalance: 0,
+      paymentReceived: 0,
+    }
+  );
 
   const selectedRoom = useMemo(
     () => rooms.find((r) => r.id === roomId),
@@ -44,7 +71,6 @@ export function CreateStatementForm({
     e.preventDefault();
     setError('');
     const form = e.currentTarget;
-    const tenantId = (form.querySelector('[name="tenantId"]') as HTMLSelectElement)?.value;
     const periodStart = (form.querySelector('[name="periodStart"]') as HTMLInputElement)?.value;
     const periodEnd = (form.querySelector('[name="periodEnd"]') as HTMLInputElement)?.value;
 
@@ -67,9 +93,10 @@ export function CreateStatementForm({
     });
 
     const res = await fetch(withBasePath('/api/statements'), {
-      method: 'POST',
+      method: editing ? 'PATCH' : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        ...(statement ? { id: statement.id } : {}),
         roomId,
         tenantId,
         periodStart,
@@ -82,10 +109,10 @@ export function CreateStatementForm({
     });
     const data = await res.json();
     if (!res.ok) {
-      setError(data.error || '新增失敗');
+      setError(data.error || (editing ? '更新失敗' : '新增失敗'));
       return;
     }
-    router.push(returnTo || `/properties/${selectedRoom?.propertyId || ''}/statements`);
+    router.push(returnTo || (statement ? `/statements/${statement.id}` : `/properties/${selectedRoom?.propertyId || ''}/statements`));
     router.refresh();
   }
 
@@ -102,7 +129,10 @@ export function CreateStatementForm({
           name="roomId"
           required
           value={roomId}
-          onChange={(e) => setRoomId(e.target.value)}
+          onChange={(e) => {
+            setRoomId(e.target.value);
+            setTenantId('');
+          }}
         >
           <option value="">請選擇</option>
           {rooms.map((r) => (
@@ -114,7 +144,12 @@ export function CreateStatementForm({
       </div>
       <div className="form-group">
         <label>租客 *</label>
-        <select name="tenantId" required key={roomId}>
+        <select
+          name="tenantId"
+          required
+          value={tenantId}
+          onChange={(e) => setTenantId(e.target.value)}
+        >
           <option value="">請選擇</option>
           {(selectedRoom?.tenants || []).map((t) => (
             <option key={t.id} value={t.id}>
@@ -131,17 +166,17 @@ export function CreateStatementForm({
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
         <div className="form-group">
           <label>開始日期 *</label>
-          <input name="periodStart" type="date" required />
+          <input name="periodStart" type="date" required defaultValue={statement?.periodStart || ''} />
         </div>
         <div className="form-group">
           <label>結束日期 *</label>
-          <input name="periodEnd" type="date" required />
+          <input name="periodEnd" type="date" required defaultValue={statement?.periodEnd || ''} />
         </div>
       </div>
 
       <h3 style={{ margin: '1.5rem 0 0.5rem' }}>收費項目</h3>
       {billings.map((b, i) => (
-        <div key={i} style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.5rem', alignItems: 'end', marginBottom: '0.5rem' }}>
+        <div key={i} style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr) auto', gap: '0.5rem', alignItems: 'end', marginBottom: '0.5rem' }}>
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label>項目</label>
             <input
@@ -204,8 +239,30 @@ export function CreateStatementForm({
               }}
             />
           </div>
+          {billings.length > 1 && (
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setBillings(billings.filter((_, idx) => idx !== i))}
+            >
+              移除
+            </button>
+          )}
         </div>
       ))}
+      <button
+        type="button"
+        className="btn btn-secondary"
+        style={{ marginBottom: '0.5rem' }}
+        onClick={() =>
+          setBillings([
+            ...billings,
+            { title: '', qty: 0, unitRate: 0, lastReading: 0, thisReading: 0, issueDate: '' },
+          ])
+        }
+      >
+        新增項目
+      </button>
 
       <h3 style={{ margin: '1rem 0 0.5rem' }}>上次繳款（選填）</h3>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
@@ -238,7 +295,7 @@ export function CreateStatementForm({
       </div>
 
       <button type="submit" className="btn btn-primary" style={{ marginTop: '1rem' }}>
-        新增租單
+        {editing ? '儲存' : '新增租單'}
       </button>
     </form>
   );
