@@ -178,7 +178,7 @@ async function readApp(app: AppSpec): Promise<DeployAppStatus> {
     base.head = await git(app, ['rev-parse', '--short', 'HEAD']);
     const raw = await git(app, [
       'log',
-      '-15',
+      '-5',
       '--pretty=format:%H%x1f%h%x1f%an%x1f%ad%x1f%s',
       '--date=iso-strict',
     ]);
@@ -219,52 +219,92 @@ async function readApp(app: AppSpec): Promise<DeployAppStatus> {
   return base;
 }
 
-function scriptFor(app: AppSpec): string {
-  if (app.id === 'rental') {
-    return `#!/bin/bash
+export type DeployAction = 'build' | 'up' | 'restart' | 'version';
+
+function scriptFor(app: AppSpec, action: DeployAction, version?: string): string {
+  const log = `/tmp/deploy-${app.id}.log`;
+  const head = `#!/bin/bash
 set -euo pipefail
-exec >> /tmp/deploy-rental.log 2>&1
-echo "---- $(date -Is) 開始部署租務易 ----"
+exec >> ${log} 2>&1
+echo "---- $(date -Is) ${action} ${app.name} ----"
+`;
+  if (app.id === 'rental') {
+    if (action === 'restart' || action === 'up') {
+      return `${head}
 cd /var/www/houseasy-app
-git pull --ff-only origin main
+pm2 restart houseasy-rental
+echo "---- $(date -Is) done ----"
+`;
+    }
+    if (action === 'version') {
+      return `${head}
+cd /var/www/houseasy-app
+git checkout ${version}
 npm install
 npx prisma migrate deploy
 npm run build
 pm2 restart houseasy-rental
-echo "---- $(date -Is) 租務易部署完成 ----"
+echo "---- $(date -Is) done ${version} ----"
+`;
+    }
+    return `${head}
+cd /var/www/houseasy-app
+git checkout main
+git pull --ff-only origin main
+npm install
+npx prisma migrate deploy
+npm run build
+echo "---- $(date -Is) build done ----"
 `;
   }
-  return `#!/bin/bash
-set -euo pipefail
-exec >> /tmp/deploy-levo.log 2>&1
-echo "---- $(date -Is) 開始部署 LEVO ----"
-export GIT_SSH_COMMAND='ssh -i ${GITHUB_KEY} -o IdentitiesOnly=yes -o BatchMode=yes'
+  const gitSsh = `export GIT_SSH_COMMAND='ssh -i ${GITHUB_KEY} -o IdentitiesOnly=yes -o BatchMode=yes'`;
+  if (action === 'restart' || action === 'up') {
+    return `${head}
+${gitSsh}
+systemctl restart levo-web levo-api
+echo "---- $(date -Is) done ----"
+`;
+  }
+  if (action === 'version') {
+    return `${head}
+${gitSsh}
 cd /var/www/levo
-git pull --ff-only origin main
+git checkout ${version}
 npm run build:frontend
 npm run build:backend
 chown -R levo:levo /var/www/levo
 systemctl restart levo-web levo-api
-echo "---- $(date -Is) LEVO 部署完成 ----"
+echo "---- $(date -Is) done ${version} ----"
+`;
+  }
+  return `${head}
+${gitSsh}
+cd /var/www/levo
+git checkout main
+git pull --ff-only origin main
+npm run build:frontend
+npm run build:backend
+chown -R levo:levo /var/www/levo
+echo "---- $(date -Is) build done ----"
 `;
 }
 
-export function startDeploy(id: DeployAppId): { error?: string } {
+export function startDeploy(id: DeployAppId, action: DeployAction, version?: string): { error?: string } {
   const app = APPS[id];
   if (!fs.existsSync(path.join(app.dir, '.git'))) {
     return { error: '此環境不能部署' };
   }
   if (deploying(id)) {
-    return { error: '這個程式正在部署' };
+    return { error: '這個程式正在執行' };
+  }
+  if (action === 'version') {
+    if (!version || !/^[0-9a-f]{7,40}$/i.test(version)) return { error: '版本無效' };
   }
   const script = `/tmp/deploy-${id}.sh`;
-  fs.writeFileSync(script, scriptFor(app), { mode: 0o700 });
+  fs.writeFileSync(script, scriptFor(app, action, version), { mode: 0o700 });
   fs.writeFileSync(logPath(id), '');
-  const child = spawn('bash', [script], {
-    detached: true,
-    stdio: 'ignore',
-  });
-  if (!child.pid) return { error: '無法開始部署' };
+  const child = spawn('bash', [script], { detached: true, stdio: 'ignore' });
+  if (!child.pid) return { error: '無法開始' };
   fs.writeFileSync(lockPath(id), String(child.pid));
   child.unref();
   return {};
