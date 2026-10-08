@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { withBasePath } from '@/lib/base-path';
+import { inferChargeMode, type ChargeMode } from '@/lib/billing';
 
 type RoomOption = {
   id: string;
@@ -14,6 +15,8 @@ type RoomOption = {
 };
 
 type BillingRow = {
+  key: string;
+  mode: ChargeMode;
   title: string;
   qty: number;
   unitRate: number;
@@ -21,6 +24,33 @@ type BillingRow = {
   thisReading: number;
   issueDate: string;
 };
+
+function rowKey() {
+  return crypto.randomUUID();
+}
+
+function toBillingRow(
+  b: {
+    title: string;
+    qty: number;
+    unitRate: number;
+    lastReading: number;
+    thisReading: number;
+    issueDate: string;
+  },
+  mode?: ChargeMode
+): BillingRow {
+  return {
+    key: rowKey(),
+    mode: mode ?? inferChargeMode(b.lastReading, b.thisReading, b.qty),
+    title: b.title,
+    qty: b.qty,
+    unitRate: b.unitRate,
+    lastReading: b.lastReading,
+    thisReading: b.thisReading,
+    issueDate: b.issueDate,
+  };
+}
 
 export function CreateStatementForm({
   rooms,
@@ -47,11 +77,11 @@ export function CreateStatementForm({
   const [roomId, setRoomId] = useState(statement?.roomId || defaultRoomId || rooms[0]?.id || '');
   const [tenantId, setTenantId] = useState(statement?.tenantId || '');
   const [billings, setBillings] = useState<BillingRow[]>(
-    statement?.billings?.length
-      ? statement.billings
+    statement
+      ? statement.billings.map((b) => toBillingRow(b))
       : [
-          { title: '電費', qty: 0, unitRate: 1.8, lastReading: 0, thisReading: 0, issueDate: '' },
-          { title: '水費', qty: 0, unitRate: 16, lastReading: 0, thisReading: 0, issueDate: '' },
+          toBillingRow({ title: '電費', qty: 0, unitRate: 1.8, lastReading: 0, thisReading: 0, issueDate: '' }, 'reading'),
+          toBillingRow({ title: '水費', qty: 0, unitRate: 16, lastReading: 0, thisReading: 0, issueDate: '' }, 'reading'),
         ]
   );
   const [renting, setRenting] = useState(
@@ -67,6 +97,10 @@ export function CreateStatementForm({
     [rooms, roomId]
   );
 
+  function updateBilling(index: number, patch: Partial<BillingRow>) {
+    setBillings((rows) => rows.map((row, i) => (i === index ? { ...row, ...patch } : row)));
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError('');
@@ -79,12 +113,36 @@ export function CreateStatementForm({
       return;
     }
 
-    const billingsData = billings.map((b, i) => {
-      const qty = b.thisReading - b.lastReading;
+    const activeBillings = billings.filter(
+      (b) => b.title.trim() || b.qty || b.unitRate || b.lastReading || b.thisReading || b.issueDate
+    );
+    for (const b of activeBillings) {
+      if (!b.title.trim()) {
+        setError('請填寫收費項目名稱');
+        return;
+      }
+      if (b.mode === 'reading' && b.thisReading < b.lastReading) {
+        setError(`「${b.title.trim()}」今月度數不可小於上月度數`);
+        return;
+      }
+    }
+
+    const billingsData = activeBillings.map((b, i) => {
+      if (b.mode === 'qty') {
+        return {
+          issueDate: b.issueDate || periodEnd,
+          title: b.title.trim(),
+          qty: b.qty,
+          unitRate: b.unitRate,
+          lastReading: 0,
+          thisReading: 0,
+          placement: i + 1,
+        };
+      }
       return {
         issueDate: b.issueDate || periodEnd,
-        title: b.title,
-        qty: qty >= 0 ? qty : 0,
+        title: b.title.trim(),
+        qty: b.thisReading - b.lastReading,
         unitRate: b.unitRate,
         lastReading: b.lastReading,
         thisReading: b.thisReading,
@@ -175,89 +233,121 @@ export function CreateStatementForm({
       </div>
 
       <h3 style={{ margin: '1.5rem 0 0.5rem' }}>收費項目</h3>
-      {billings.map((b, i) => (
-        <div key={i} style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr) auto', gap: '0.5rem', alignItems: 'end', marginBottom: '0.5rem' }}>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label>項目</label>
-            <input
-              value={b.title}
-              onChange={(e) => {
-                const next = [...billings];
-                next[i].title = e.target.value;
-                setBillings(next);
-              }}
-            />
-          </div>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label>上月度數</label>
-            <input
-              type="number"
-              step="0.01"
-              value={b.lastReading || ''}
-              onChange={(e) => {
-                const next = [...billings];
-                next[i].lastReading = parseFloat(e.target.value) || 0;
-                setBillings(next);
-              }}
-            />
-          </div>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label>今月度數</label>
-            <input
-              type="number"
-              step="0.01"
-              value={b.thisReading || ''}
-              onChange={(e) => {
-                const next = [...billings];
-                next[i].thisReading = parseFloat(e.target.value) || 0;
-                setBillings(next);
-              }}
-            />
-          </div>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label>單價</label>
-            <input
-              type="number"
-              step="0.01"
-              value={b.unitRate || ''}
-              onChange={(e) => {
-                const next = [...billings];
-                next[i].unitRate = parseFloat(e.target.value) || 0;
-                setBillings(next);
-              }}
-            />
-          </div>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label>日期</label>
-            <input
-              type="date"
-              value={b.issueDate}
-              onChange={(e) => {
-                const next = [...billings];
-                next[i].issueDate = e.target.value;
-                setBillings(next);
-              }}
-            />
-          </div>
-          {billings.length > 1 && (
+      <p style={{ color: 'var(--muted)', fontSize: '0.875rem', marginBottom: '0.75rem' }}>
+        選填。每一項使用度數（上月度數及今月度數）或數量，可全部移除。
+      </p>
+      {billings.length === 0 && (
+        <p style={{ color: 'var(--muted)', marginBottom: '0.75rem' }}>此租單沒有收費項目</p>
+      )}
+      {billings.map((b, i) => {
+        const usage = b.thisReading - b.lastReading;
+        return (
+          <div
+            key={b.key}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1.3fr 0.85fr 1fr 1fr 0.75fr 1.15fr auto',
+              gap: '0.5rem',
+              alignItems: 'end',
+              marginBottom: '0.5rem',
+            }}
+          >
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label>項目</label>
+              <input value={b.title} onChange={(e) => updateBilling(i, { title: e.target.value })} />
+            </div>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label>計算</label>
+              <select
+                value={b.mode}
+                onChange={(e) => {
+                  const mode = e.target.value as ChargeMode;
+                  if (mode === 'qty' && b.thisReading >= b.lastReading && (b.lastReading !== 0 || b.thisReading !== 0)) {
+                    updateBilling(i, { mode, qty: b.thisReading - b.lastReading });
+                    return;
+                  }
+                  updateBilling(i, { mode });
+                }}
+              >
+                <option value="reading">度數</option>
+                <option value="qty">數量</option>
+              </select>
+            </div>
+            {b.mode === 'reading' ? (
+              <>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label>上月度數</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={b.lastReading || ''}
+                    onChange={(e) => updateBilling(i, { lastReading: parseFloat(e.target.value) || 0 })}
+                  />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label>今月度數</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={b.thisReading || ''}
+                    onChange={(e) => updateBilling(i, { thisReading: parseFloat(e.target.value) || 0 })}
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="form-group" style={{ marginBottom: 0, gridColumn: 'span 2' }}>
+                <label>數量</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={b.qty || ''}
+                  onChange={(e) => updateBilling(i, { qty: parseFloat(e.target.value) || 0 })}
+                />
+              </div>
+            )}
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label>單價</label>
+              <input
+                type="number"
+                step="0.01"
+                value={b.unitRate || ''}
+                onChange={(e) => updateBilling(i, { unitRate: parseFloat(e.target.value) || 0 })}
+              />
+            </div>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label>日期</label>
+              <input
+                type="date"
+                value={b.issueDate}
+                onChange={(e) => updateBilling(i, { issueDate: e.target.value })}
+              />
+            </div>
             <button
               type="button"
               className="btn btn-secondary"
-              onClick={() => setBillings(billings.filter((_, idx) => idx !== i))}
+              onClick={() => setBillings((rows) => rows.filter((row) => row.key !== b.key))}
             >
               移除
             </button>
-          )}
-        </div>
-      ))}
+            {b.mode === 'reading' && (
+              <span style={{ gridColumn: '3 / 5', marginTop: '-0.15rem', marginBottom: '0.35rem', fontSize: '0.75rem', color: usage < 0 ? 'var(--error)' : 'var(--muted)' }}>
+                {usage < 0 ? '今月度數不可小於上月度數' : `用量 ${usage}`}
+              </span>
+            )}
+          </div>
+        );
+      })}
       <button
         type="button"
         className="btn btn-secondary"
         style={{ marginBottom: '0.5rem' }}
         onClick={() =>
-          setBillings([
-            ...billings,
-            { title: '', qty: 0, unitRate: 0, lastReading: 0, thisReading: 0, issueDate: '' },
+          setBillings((rows) => [
+            ...rows,
+            toBillingRow({ title: '', qty: 0, unitRate: 0, lastReading: 0, thisReading: 0, issueDate: '' }, 'qty'),
           ])
         }
       >

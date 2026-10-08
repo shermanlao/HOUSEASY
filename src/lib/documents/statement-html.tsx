@@ -1,4 +1,5 @@
 import type { Statement, Property, Tenant, Billing, Renting, Room } from '@prisma/client';
+import { chargeUsesReadings } from '@/lib/billing';
 
 function num(n: unknown): number {
   if (typeof n === 'number') return n;
@@ -13,24 +14,96 @@ type StatementWithRelations = Statement & {
   rentings: Renting[];
 };
 
+function meterLabels(title: string) {
+  const lower = title.toLowerCase();
+  if (title.includes('電') || lower.includes('electric')) {
+    return {
+      section: '本月電費金額 Monthly Electricity Fee',
+      last: '上月電費度數 Last Reading',
+      current: '本月電費度數 Electricity Reading',
+      used: '耗電度數 Total Used',
+    };
+  }
+  if (title.includes('水') || lower.includes('water')) {
+    return {
+      section: '本月水費金額 Monthly Water Fee',
+      last: '上月水費度數 Last Reading',
+      current: '本月水費度數 Water Reading',
+      used: '耗水度數 Total Used',
+    };
+  }
+  return {
+    section: title,
+    last: '上月度數 Last Reading',
+    current: '今月度數 This Reading',
+    used: '用量 Total Used',
+  };
+}
+
+function renderBillingSection(b: Billing): string {
+  const qty = num(b.qty);
+  const rate = num(b.unitRate);
+  const subtotal = `HK$${rate.toFixed(2)} x ${qty} = $${(qty * rate).toFixed(2)}`;
+  const date = new Date(b.issueDate).toLocaleDateString('en-GB');
+
+  if (!chargeUsesReadings(num(b.lastReading), num(b.thisReading))) {
+    return `
+  <div class="section-title">${b.title}</div>
+  <table>
+    <thead>
+      <tr>
+        <th>數量 QTY</th>
+        <th>日期 Date</th>
+        <th>合計 Subtotal</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>${qty}</td>
+        <td>${date}</td>
+        <td>${subtotal}</td>
+      </tr>
+    </tbody>
+  </table>`;
+  }
+
+  const labels = meterLabels(b.title);
+  return `
+  <div class="section-title">${labels.section}</div>
+  <table>
+    <thead>
+      <tr>
+        <th>${labels.last}</th>
+        <th>日期 Date</th>
+        <th>${labels.current}</th>
+        <th>日期 Date</th>
+        <th>${labels.used}</th>
+        <th>合計 Subtotal</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>${num(b.lastReading)}</td>
+        <td>${date}</td>
+        <td>${num(b.thisReading)}</td>
+        <td>${date}</td>
+        <td>${qty}</td>
+        <td>${subtotal}</td>
+      </tr>
+    </tbody>
+  </table>`;
+}
+
 export function renderStatementHTML(stmt: StatementWithRelations): string {
   const billingTotal = stmt.billings.reduce((sum, b) => sum + num(b.qty) * num(b.unitRate), 0);
   const rentingBalance = stmt.rentings.reduce((sum, r) => sum + (num(r.paymentReceived) - num(r.openingBalance)), 0);
   const monthlyRent = num(stmt.room.monthlyRent);
   const totalDue = monthlyRent + billingTotal - rentingBalance;
 
-  const elec = stmt.billings.find((b) => b.title.includes('電') || b.title.toLowerCase().includes('electric'));
-  const water = stmt.billings.find((b) => b.title.includes('水') || b.title.toLowerCase().includes('water'));
-
-  const billingRow = (b: (typeof stmt.billings)[0]) => `
-    <tr>
-      <td>${num(b.lastReading)}</td>
-      <td>${new Date(b.issueDate).toLocaleDateString('en-GB')}</td>
-      <td>${num(b.thisReading)}</td>
-      <td>${new Date(b.issueDate).toLocaleDateString('en-GB')}</td>
-      <td>${num(b.qty)}</td>
-      <td>HK$${num(b.unitRate).toFixed(2)} x ${num(b.qty)} = $${(num(b.qty) * num(b.unitRate)).toFixed(2)}</td>
-    </tr>`;
+  const billingSections = [...stmt.billings]
+    .sort((a, b) => a.placement - b.placement)
+    .map((b) => renderBillingSection(b))
+    .join('');
 
   const rentingRows = stmt.rentings
     .sort((a, b) => a.placement - b.placement)
@@ -71,56 +144,7 @@ export function renderStatementHTML(stmt: StatementWithRelations): string {
     <tr><th>地址 Address</th><td>${stmt.room.property.addressChinese}<br>${stmt.room.property.addressEnglish} ${stmt.room.name}</td></tr>
   </table>
 
-  ${elec ? `
-  <div class="section-title">本月電費金額 Monthly Electricity Fee</div>
-  <table>
-    <thead>
-      <tr>
-        <th>上月電費度數 Last Reading</th>
-        <th>日期 Date</th>
-        <th>本月電費度數 Electricity Reading</th>
-        <th>日期 Date</th>
-        <th>耗電度數 Total Used</th>
-        <th>合計 Subtotal</th>
-      </tr>
-    </thead>
-    <tbody>${billingRow(elec)}</tbody>
-  </table>
-  ` : ''}
-
-  ${water ? `
-  <div class="section-title">本月水費金額 Monthly Water Fee</div>
-  <table>
-    <thead>
-      <tr>
-        <th>上月水費度數 Last Reading</th>
-        <th>日期 Date</th>
-        <th>本月水費度數 Water Reading</th>
-        <th>日期 Date</th>
-        <th>耗水度數 Total Used</th>
-        <th>合計 Subtotal</th>
-      </tr>
-    </thead>
-    <tbody>${billingRow(water)}</tbody>
-  </table>
-  ` : ''}
-
-  ${!elec && !water && stmt.billings.length > 0 ? stmt.billings.sort((a,b)=>a.placement-b.placement).map((b) => `
-  <div class="section-title">${b.title}</div>
-  <table>
-    <thead>
-      <tr>
-        <th>上月度數 Last Reading</th>
-        <th>日期 Date</th>
-        <th>今月度數 This Reading</th>
-        <th>日期 Date</th>
-        <th>用量 Total Used</th>
-        <th>合計 Subtotal</th>
-      </tr>
-    </thead>
-    <tbody>${billingRow(b)}</tbody>
-  </table>
-  `).join('') : ''}
+  ${billingSections}
 
   <div class="section-title">本月租金 Monthly Rent</div>
   <p>HK$${monthlyRent.toLocaleString()}</p>

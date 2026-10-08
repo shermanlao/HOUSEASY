@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { getSession } from '@/lib/auth';
 import { getStatement } from '@/actions/statement';
 import { PageShell } from '@/components/PageShell';
+import { chargeUsesReadings } from '@/lib/billing';
 
 function num(n: unknown): number {
   if (typeof n === 'number') return n;
@@ -41,30 +42,37 @@ export default async function StatementDetailPage({
         </p>
 
         <h3 style={{ marginTop: '1.5rem' }}>收費項目</h3>
-        <table className="table">
-          <thead>
-            <tr>
-              <th>項目</th>
-              <th>上月度數</th>
-              <th>今月度數</th>
-              <th>用量</th>
-              <th>單價</th>
-              <th>小計</th>
-            </tr>
-          </thead>
-          <tbody>
-            {stmt.billings.map((b) => (
-              <tr key={b.id}>
-                <td>{b.title}</td>
-                <td>{num(b.lastReading)}</td>
-                <td>{num(b.thisReading)}</td>
-                <td>{num(b.qty)}</td>
-                <td>${num(b.unitRate)}</td>
-                <td>${(num(b.qty) * num(b.unitRate)).toFixed(2)}</td>
+        {stmt.billings.length === 0 ? (
+          <p style={{ color: 'var(--muted)' }}>沒有收費項目</p>
+        ) : (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>項目</th>
+                <th>上月度數</th>
+                <th>今月度數</th>
+                <th>數量</th>
+                <th>單價</th>
+                <th>小計</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {stmt.billings.map((b) => {
+                const readings = chargeUsesReadings(num(b.lastReading), num(b.thisReading));
+                return (
+                  <tr key={b.id}>
+                    <td>{b.title}</td>
+                    <td>{readings ? num(b.lastReading) : '—'}</td>
+                    <td>{readings ? num(b.thisReading) : '—'}</td>
+                    <td>{num(b.qty)}</td>
+                    <td>${num(b.unitRate)}</td>
+                    <td>${(num(b.qty) * num(b.unitRate)).toFixed(2)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
 
         <p style={{ marginTop: '0.5rem' }}><strong>月租：</strong>${monthlyRent.toLocaleString()}</p>
 
