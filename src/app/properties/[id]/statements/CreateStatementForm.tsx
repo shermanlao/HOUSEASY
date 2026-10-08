@@ -14,9 +14,7 @@ type RoomOption = {
   tenants: { id: string; nameChinese: string; nameEnglish: string }[];
 };
 
-type BillingRow = {
-  key: string;
-  mode: ChargeMode;
+type BillingInput = {
   title: string;
   qty: number;
   unitRate: number;
@@ -25,21 +23,16 @@ type BillingRow = {
   issueDate: string;
 };
 
+type BillingRow = BillingInput & {
+  key: string;
+  mode: ChargeMode;
+};
+
 function rowKey() {
   return crypto.randomUUID();
 }
 
-function toBillingRow(
-  b: {
-    title: string;
-    qty: number;
-    unitRate: number;
-    lastReading: number;
-    thisReading: number;
-    issueDate: string;
-  },
-  mode?: ChargeMode
-): BillingRow {
+function toBillingRow(b: BillingInput, mode?: ChargeMode): BillingRow {
   return {
     key: rowKey(),
     mode: mode ?? inferChargeMode(b.lastReading, b.thisReading, b.qty),
@@ -67,7 +60,7 @@ export function CreateStatementForm({
     tenantId: string;
     periodStart: string;
     periodEnd: string;
-    billings: BillingRow[];
+    billings: BillingInput[];
     renting: { lastPaymentDate: string; openingBalance: number; paymentReceived: number };
   };
 }) {
