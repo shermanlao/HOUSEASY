@@ -123,7 +123,6 @@ async function readApp(app: AppSpec): Promise<DeployAppStatus> {
     behind: null,
     dirty: [],
     fetchError: null,
-    fetchError: null,
     deploying: deploying(app.id),
     log: readLog(app.id),
     commits: [],
