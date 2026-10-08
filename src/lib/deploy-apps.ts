@@ -182,16 +182,15 @@ set -euo pipefail
 exec >> ${log} 2>&1
 echo "---- $(date -Is) ${action} ${app.name} ----"
 `;
-  if (app.id === 'rental') {
-    if (action === 'restart' || action === 'up') {
-      return `${head}
+  if (action === 'restart' || action === 'up') {
+    return `${head}
 cd /var/www/houseasy-app
 pm2 restart houseasy-rental
 echo "---- $(date -Is) done ----"
 `;
-    }
-    if (action === 'version') {
-      return `${head}
+  }
+  if (action === 'version') {
+    return `${head}
 cd /var/www/houseasy-app
 git checkout ${version}
 npm install
@@ -200,8 +199,8 @@ npm run build
 pm2 restart houseasy-rental
 echo "---- $(date -Is) done ${version} ----"
 `;
-    }
-    return `${head}
+  }
+  return `${head}
 cd /var/www/houseasy-app
 git checkout main
 git pull --ff-only origin main
@@ -210,7 +209,6 @@ npx prisma migrate deploy
 npm run build
 echo "---- $(date -Is) build done ----"
 `;
-  }
 }
 
 export function startDeploy(id: DeployAppId, action: DeployAction, version?: string): { error?: string } {
