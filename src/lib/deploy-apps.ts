@@ -193,7 +193,8 @@ echo "---- $(date -Is) done ----"
     return `${head}
 cd /var/www/houseasy-app
 git checkout ${version}
-npm install
+git checkout -- package.json
+npm install --include=dev
 npx prisma migrate deploy
 npm run build
 pm2 restart houseasy-rental
@@ -203,8 +204,9 @@ echo "---- $(date -Is) done ${version} ----"
   return `${head}
 cd /var/www/houseasy-app
 git checkout main
+git checkout -- package.json
 git pull --ff-only origin main
-npm install
+npm install --include=dev
 npx prisma migrate deploy
 npm run build
 echo "---- $(date -Is) build done ----"
