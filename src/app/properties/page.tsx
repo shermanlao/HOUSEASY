@@ -28,6 +28,7 @@ export default async function PropertiesPage() {
             <thead>
               <tr>
                 <th>物業名稱</th>
+                {session.role === 'ADMIN' && <th>業主</th>}
                 <th>地址（中文）</th>
                 <th>地址（英文）</th>
                 <th>房間數</th>
@@ -43,6 +44,9 @@ export default async function PropertiesPage() {
                 return (
                   <tr key={p.id}>
                     <td>{p.name || p.addressChinese || '-'}</td>
+                    {session.role === 'ADMIN' && (
+                      <td>{p.owners.map((o) => o.user.name).filter(Boolean).join(', ') || '—'}</td>
+                    )}
                     <td>{p.addressChinese}</td>
                     <td>{p.addressEnglish}</td>
                     <td>{p._count.rooms}</td>

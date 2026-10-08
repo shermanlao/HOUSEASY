@@ -5,6 +5,9 @@ import { requireAuth } from '@/lib/auth';
 import { canAccessProperty } from '@/lib/access';
 
 const propertyListInclude = {
+  owners: {
+    include: { user: { select: { name: true } } },
+  },
   rooms: {
     include: {
       tenants: true,
