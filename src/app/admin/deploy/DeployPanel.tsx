@@ -13,7 +13,7 @@ function formatWhen(value: string) {
 export function DeployPanel() {
   const [apps, setApps] = useState<DeployAppStatus[]>([]);
   const [error, setError] = useState('');
-  const [message, setMessage] = useState('Idle. Click Build to start.');
+  const [message, setMessage] = useState('Idle. Click Put up to start.');
   const [ok, setOk] = useState(true);
   const [loading, setLoading] = useState(true);
   const [versionsOpen, setVersionsOpen] = useState(false);
@@ -66,7 +66,7 @@ export function DeployPanel() {
     }
   }, [app]);
 
-  async function run(action: 'build' | 'up' | 'restart' | 'version', version?: string) {
+  async function run(action: 'up' | 'restart' | 'version', version?: string) {
     if (!app) return;
     setError('');
     setOk(true);
@@ -136,7 +136,7 @@ export function DeployPanel() {
       <div className="intro">
         <h1>VPS app versions</h1>
         <p>
-          This page deploys RentalEasy on the server. It uses the saved git key, so Build and Put up do not ask for a token.
+          This page deploys RentalEasy on the server. It uses the saved git key, so Put up does not ask for a token.
           Newest 5 commits are listed. The running commit is never removed.
         </p>
       </div>
@@ -189,11 +189,8 @@ export function DeployPanel() {
 
         <div className="panel panel-main">
           <div className="row">
-            <button type="button" className="primary" disabled={busy || !app.available} onClick={() => void run('build')}>
-              {busy ? 'Working…' : 'Build'}
-            </button>
-            <button type="button" disabled={busy || !app.available} onClick={() => void run('up')}>
-              Put up
+            <button type="button" className="primary" disabled={busy || !app.available} onClick={() => void run('up')}>
+              {busy ? 'Working…' : 'Put up'}
             </button>
             <button type="button" disabled={busy || !app.available} onClick={() => void run('restart')}>
               Restart

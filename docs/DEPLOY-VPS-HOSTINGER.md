@@ -66,7 +66,7 @@ nginx -t && systemctl reload nginx
 
 ## Version page
 
-Admins open `/rental/admin/deploy` for RentalEasy only. Versions sit on the left; Build, Put up, and Restart sit in the center. The server uses its existing git access, so the page does not ask for a token. LEVO is not on this page. See [DEPLOY-PANEL.md](DEPLOY-PANEL.md).
+Admins open `/rental/admin/deploy` for RentalEasy only. Versions sit on the left; Put up and Restart sit in the center. Put up pulls `main`, builds, and restarts. The server uses its existing git access, so the page does not ask for a token. LEVO is not on this page. See [DEPLOY-PANEL.md](DEPLOY-PANEL.md).
 
 Cursor chat can still run `/push-vps` to commit this repo and deploy RentalEasy only. That does not deploy LEVO.
 

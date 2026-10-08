@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     const app = parseDeployApp(body.app);
     if (!app) return Response.json({ error: '未知的程式' }, { status: 400 });
     const action = body.action as DeployAction;
-    if (action !== 'build' && action !== 'up' && action !== 'restart' && action !== 'version') {
+    if (action !== 'up' && action !== 'restart' && action !== 'version') {
       return Response.json({ error: '未知的動作' }, { status: 400 });
     }
     const result = startDeploy(app, action, typeof body.version === 'string' ? body.version : undefined);

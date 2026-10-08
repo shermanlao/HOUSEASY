@@ -173,7 +173,7 @@ async function readApp(app: AppSpec): Promise<DeployAppStatus> {
   return base;
 }
 
-export type DeployAction = 'build' | 'up' | 'restart' | 'version';
+export type DeployAction = 'up' | 'restart' | 'version';
 
 function scriptFor(app: AppSpec, action: DeployAction, version?: string): string {
   const log = `/tmp/deploy-${app.id}.log`;
@@ -182,7 +182,7 @@ set -euo pipefail
 exec >> ${log} 2>&1
 echo "---- $(date -Is) ${action} ${app.name} ----"
 `;
-  if (action === 'restart' || action === 'up') {
+  if (action === 'restart') {
     return `${head}
 cd /var/www/houseasy-app
 pm2 restart houseasy-rental
@@ -209,7 +209,8 @@ git pull --ff-only origin main
 npm install --include=dev
 npx prisma migrate deploy
 npm run build
-echo "---- $(date -Is) build done ----"
+pm2 restart houseasy-rental
+echo "---- $(date -Is) done ----"
 `;
 }
 
