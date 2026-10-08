@@ -1,18 +1,17 @@
-import { execFile, execFileSync, spawn } from 'child_process';
+import { execFile, spawn } from 'child_process';
 import { promisify } from 'util';
 import fs from 'fs';
 import path from 'path';
 
 const execFileAsync = promisify(execFile);
 
-export type DeployAppId = 'rental' | 'levo';
+export type DeployAppId = 'rental';
 
 type AppSpec = {
   id: DeployAppId;
   name: string;
   dir: string;
   branch: string;
-  usesGithubKey: boolean;
 };
 
 const APPS: Record<DeployAppId, AppSpec> = {
@@ -21,18 +20,8 @@ const APPS: Record<DeployAppId, AppSpec> = {
     name: '租務易 RentalEasy',
     dir: '/var/www/houseasy-app',
     branch: 'main',
-    usesGithubKey: false,
-  },
-  levo: {
-    id: 'levo',
-    name: 'LEVO',
-    dir: '/var/www/levo',
-    branch: 'main',
-    usesGithubKey: true,
   },
 };
-
-const GITHUB_KEY = '/root/.ssh/github_levo';
 
 export type DeployCommit = {
   hash: string;
@@ -53,59 +42,30 @@ export type DeployAppStatus = {
   behind: number | null;
   dirty: string[];
   fetchError: string | null;
-  publicKey: string | null;
-  needsGithubKey: boolean;
   deploying: boolean;
   log: string;
   commits: DeployCommit[];
 };
 
 function isAppId(value: string): value is DeployAppId {
-  return value === 'rental' || value === 'levo';
+  return value === 'rental';
 }
 
 export function parseDeployApp(value: unknown): DeployAppId | null {
   return typeof value === 'string' && isAppId(value) ? value : null;
 }
 
-function gitEnv(app: AppSpec): NodeJS.ProcessEnv {
-  const env = { ...process.env };
-  if (app.usesGithubKey && fs.existsSync(GITHUB_KEY)) {
-    env.GIT_SSH_COMMAND = `ssh -i ${GITHUB_KEY} -o IdentitiesOnly=yes -o BatchMode=yes`;
-  }
-  return env;
+function gitEnv(): NodeJS.ProcessEnv {
+  return { ...process.env };
 }
 
 async function git(app: AppSpec, args: string[], timeout = 20000): Promise<string> {
   const { stdout } = await execFileAsync('git', ['-C', app.dir, ...args], {
     timeout,
-    env: gitEnv(app),
+    env: gitEnv(),
     maxBuffer: 1024 * 1024,
   });
   return stdout.trim();
-}
-
-function ensureGithubKey(): string | null {
-  if (process.platform !== 'linux') return null;
-  try {
-    fs.mkdirSync('/root/.ssh', { recursive: true, mode: 0o700 });
-    if (!fs.existsSync(GITHUB_KEY)) {
-      execFileSyncKeygen();
-    }
-    const pub = `${GITHUB_KEY}.pub`;
-    return fs.existsSync(pub) ? fs.readFileSync(pub, 'utf8').trim() : null;
-  } catch {
-    return null;
-  }
-}
-
-function execFileSyncKeygen() {
-  execFileSync(
-    'ssh-keygen',
-    ['-t', 'ed25519', '-f', GITHUB_KEY, '-N', '', '-C', 'houseasy-vps-levo-deploy'],
-    { stdio: 'ignore' }
-  );
-  fs.chmodSync(GITHUB_KEY, 0o600);
 }
 
 function errorText(err: unknown): string {
@@ -163,8 +123,7 @@ async function readApp(app: AppSpec): Promise<DeployAppStatus> {
     behind: null,
     dirty: [],
     fetchError: null,
-    publicKey: app.usesGithubKey ? ensureGithubKey() : null,
-    needsGithubKey: false,
+    fetchError: null,
     deploying: deploying(app.id),
     log: readLog(app.id),
     commits: [],
@@ -210,11 +169,7 @@ async function readApp(app: AppSpec): Promise<DeployAppStatus> {
     base.behind = behind;
   } catch (err) {
     const message = errorText(err);
-    const denied = message.includes('Permission denied') || message.includes('publickey');
-    base.needsGithubKey = denied;
-    base.fetchError = denied
-      ? 'GitHub 尚未信任這台伺服器的金鑰。請把下方公鑰加到 LEVO 倉庫的 Deploy keys（只需做一次），之後推上不用再輸入 token。'
-      : message;
+    base.fetchError = message;
   }
   return base;
 }
@@ -257,36 +212,6 @@ npm run build
 echo "---- $(date -Is) build done ----"
 `;
   }
-  const gitSsh = `export GIT_SSH_COMMAND='ssh -i ${GITHUB_KEY} -o IdentitiesOnly=yes -o BatchMode=yes'`;
-  if (action === 'restart' || action === 'up') {
-    return `${head}
-${gitSsh}
-systemctl restart levo-web levo-api
-echo "---- $(date -Is) done ----"
-`;
-  }
-  if (action === 'version') {
-    return `${head}
-${gitSsh}
-cd /var/www/levo
-git checkout ${version}
-npm run build:frontend
-npm run build:backend
-chown -R levo:levo /var/www/levo
-systemctl restart levo-web levo-api
-echo "---- $(date -Is) done ${version} ----"
-`;
-  }
-  return `${head}
-${gitSsh}
-cd /var/www/levo
-git checkout main
-git pull --ff-only origin main
-npm run build:frontend
-npm run build:backend
-chown -R levo:levo /var/www/levo
-echo "---- $(date -Is) build done ----"
-`;
 }
 
 export function startDeploy(id: DeployAppId, action: DeployAction, version?: string): { error?: string } {

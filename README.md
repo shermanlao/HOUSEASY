@@ -12,7 +12,7 @@
 - **收據管理**：記錄與編輯繳款，生成收據
 - **文件列印**：租單及收據以中英雙語輸出，格式與範本一致；列印頁可下載 PDF
 - **搜尋管理**（僅管理員）：物業搜尋樓盤筆數與手動同步
-- **版本管理**（僅管理員）：同一頁用 LightX 版本面板的版面管理租務易與 LEVO（左邊版本，中間 Build / Put up / Restart），不用每次輸入 token
+- **版本管理**（僅管理員）：租務易用 LightX 版本面板的版面（左邊版本，中間 Build / Put up / Restart），不用每次輸入 token
 - **網站圖示**：瀏覽器分頁與列印頁使用藍色房屋圖示（`src/app/favicon.ico`、`icon.ico`、`apple-icon.png`）。重新產生：`node scripts/generate-house-icons.js`。houseasy.io 搜尋站（PropertySearching）使用同一組圖示，套在 `/` 底下所有頁面。
 
 ## 技術棧

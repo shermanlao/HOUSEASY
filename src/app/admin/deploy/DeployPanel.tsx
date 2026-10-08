@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { withBasePath } from '@/lib/base-path';
-import type { DeployAppId, DeployAppStatus } from '@/lib/deploy-apps';
+import type { DeployAppStatus } from '@/lib/deploy-apps';
 
 function formatWhen(value: string) {
   const date = new Date(value);
@@ -12,7 +12,6 @@ function formatWhen(value: string) {
 
 export function DeployPanel() {
   const [apps, setApps] = useState<DeployAppStatus[]>([]);
-  const [selected, setSelected] = useState<DeployAppId>('rental');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('Idle. Click Build to start.');
   const [ok, setOk] = useState(true);
@@ -42,7 +41,7 @@ export function DeployPanel() {
     };
   }, [load]);
 
-  const app = apps.find((row) => row.id === selected) || apps[0];
+  const app = apps[0];
   const busy = Boolean(app?.deploying);
 
   useEffect(() => {
@@ -137,7 +136,7 @@ export function DeployPanel() {
       <div className="intro">
         <h1>VPS app versions</h1>
         <p>
-          Same page for RentalEasy and LEVO. The server uses its saved git key, so Build and Put up do not ask for a token.
+          This page deploys RentalEasy on the server. It uses the saved git key, so Build and Put up do not ask for a token.
           Newest 5 commits are listed. The running commit is never removed.
         </p>
       </div>
@@ -190,18 +189,6 @@ export function DeployPanel() {
 
         <div className="panel panel-main">
           <div className="row">
-            {apps.map((row) => (
-              <button
-                key={row.id}
-                type="button"
-                className={row.id === app.id ? 'primary' : ''}
-                onClick={() => setSelected(row.id)}
-              >
-                {row.name}
-              </button>
-            ))}
-          </div>
-          <div className="row">
             <button type="button" className="primary" disabled={busy || !app.available} onClick={() => void run('build')}>
               {busy ? 'Working…' : 'Build'}
             </button>
@@ -217,11 +204,6 @@ export function DeployPanel() {
           </div>
           <p className={ok && !error ? 'ok' : 'err'}>{error || message}</p>
           {app.fetchError && <p className="err">{app.fetchError}</p>}
-          {app.needsGithubKey && app.publicKey && (
-            <pre className="log" style={{ flex: '0 0 auto', minHeight: 0, maxHeight: '6rem', marginBottom: '0.75rem' }}>
-              {app.publicKey}
-            </pre>
-          )}
           <div className={`bar${busy ? ' on' : ''}`}><div className="bar-run" /></div>
           <pre className="log">{app.log || 'Waiting for a job…'}</pre>
         </div>
