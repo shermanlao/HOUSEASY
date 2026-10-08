@@ -18,6 +18,8 @@ export function AppNav({
       <Link href={roomsHref}>房間管理</Link>
       <Link href={statementsHref}>租單管理</Link>
       {role === 'ADMIN' && <Link href="/admin/users">用戶管理</Link>}
+      {role === 'OWNER' && <Link href="/account">用戶管理</Link>}
+      {role === 'ADMIN' && <Link href="/admin/deploy">版本管理</Link>}
       {role === 'ADMIN' && <Link href="/admin/search">搜尋管理</Link>}
       <LogoutButton />
     </nav>

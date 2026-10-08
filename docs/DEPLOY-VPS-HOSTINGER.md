@@ -9,6 +9,8 @@ Separate site from levolight.com on the same VPS (`187.7.21.12`).
 | `/`, `/listings`, `/market-data`, … | PropertySearching | PM2 `houseasy-search` | `127.0.0.1:3001` |
 | `/rental`, `/rental/login`, … | RentalEasy (`basePath: /rental`) | PM2 `houseasy-rental` | `127.0.0.1:3002` |
 
+Both apps use the same house favicon (`favicon.ico`, `icon.ico`, `apple-icon.png` in each app’s `src/app`). Search pages are served from `/favicon.ico`; rental pages from `/rental/favicon.ico`.
+
 - Search app path: `/var/www/houseasy-search`
 - Rental app path: `/var/www/houseasy-app`
 - Bare git (rental): `/var/git/houseasy.git`
@@ -61,6 +63,12 @@ Backup before edits:
 cp /etc/nginx/sites-available/houseasy.io /etc/nginx/sites-available/houseasy.io.bak.$(date +%Y%m%d-%H%M%S)
 nginx -t && systemctl reload nginx
 ```
+
+## Version page
+
+Admins open `/rental/admin/deploy`. RentalEasy and LEVO each show their git history and a **推上** button. The server uses its existing git access, so the page does not ask for a token. See [DEPLOY-PANEL.md](DEPLOY-PANEL.md).
+
+Cursor chat can still run `/push-vps` to commit this repo and deploy RentalEasy only. That does not deploy LEVO.
 
 ## Deploy / update RentalEasy
 
