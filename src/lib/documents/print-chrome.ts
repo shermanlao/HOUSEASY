@@ -1,3 +1,5 @@
+import { withBasePath } from '@/lib/base-path';
+
 function escapeJs(value: string): string {
   return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, ' ');
 }
@@ -89,7 +91,8 @@ export function withPrintChrome(html: string, filename: string): string {
 </script>
 `;
 
-  let out = html.replace('</head>', `${chrome}</head>`);
+  const icon = `<link rel="icon" href="${withBasePath('/favicon.ico')}" sizes="any">`;
+  let out = html.replace('</head>', `${icon}${chrome}</head>`);
   if (out.includes('<body>')) {
     out = out.replace('<body>', `<body>${toolbar}`);
   } else {
