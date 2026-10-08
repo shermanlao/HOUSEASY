@@ -9,6 +9,8 @@
 
 已儲存的項目會依資料還原計法：有上月或今月度數即為度數；度數皆為 0 且數量不為 0 即為數量。
 
+上次繳款同樣選填。編輯頁以「選填」勾選決定是否記入；未勾選則不儲存。已有繳款日期的租單開啟時會維持勾選。
+
 | 記錄 | 編輯路徑 | 列表／詳情入口 |
 |------|----------|----------------|
 | 物業 | `/rental/properties/[id]/edit` | 物業列表、物業詳情 |
@@ -16,6 +18,7 @@
 | 租客 | `/rental/tenants/[id]/edit` | 房間詳情租客列 |
 | 租單 | `/rental/statements/[id]/edit` | 租單列表、租單詳情 |
 | 收據 | `/rental/receipts/[id]/edit` | 收據管理列表 |
-| 用戶 | `/rental/admin/users` 編輯對話框 | 管理員用戶列表（點擊列） |
+| 用戶（管理員） | `/rental/admin/users` 編輯對話框 | 管理員用戶列表（點擊列） |
+| 用戶（業主） | `/rental/account/edit` | 業主「用戶管理」列表，只有自己一列 |
 
-儲存走既有集合 API 的 `PATCH`（`/api/properties`、`/api/rooms`、`/api/tenants`、`/api/statements`、`/api/receipts`）。權限與檢視相同：業主只能改自己物業底下的資料。
+儲存走既有集合 API 的 `PATCH`（`/api/properties`、`/api/rooms`、`/api/tenants`、`/api/statements`、`/api/receipts`、`/api/account`）。權限與檢視相同：業主只能改自己物業底下的資料，以及自己的用戶帳號。

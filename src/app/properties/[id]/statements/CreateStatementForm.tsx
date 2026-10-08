@@ -84,6 +84,7 @@ export function CreateStatementForm({
       paymentReceived: 0,
     }
   );
+  const [includeRenting, setIncludeRenting] = useState(Boolean(statement?.renting.lastPaymentDate));
 
   const selectedRoom = useMemo(
     () => rooms.find((r) => r.id === roomId),
@@ -103,6 +104,10 @@ export function CreateStatementForm({
 
     if (!roomId || !tenantId || !periodStart || !periodEnd) {
       setError('請填寫所有必填欄位');
+      return;
+    }
+    if (includeRenting && !renting.lastPaymentDate) {
+      setError('請填寫上次繳款日期，或取消勾選上次繳款');
       return;
     }
 
@@ -153,9 +158,10 @@ export function CreateStatementForm({
         periodStart,
         periodEnd,
         billings: billingsData,
-        rentings: renting.lastPaymentDate
-          ? [{ ...renting, lastPaymentDate: renting.lastPaymentDate, placement: 1 }]
-          : [],
+        rentings:
+          includeRenting && renting.lastPaymentDate
+            ? [{ ...renting, lastPaymentDate: renting.lastPaymentDate, placement: 1 }]
+            : [],
       }),
     });
     const data = await res.json();
@@ -347,7 +353,17 @@ export function CreateStatementForm({
         新增項目
       </button>
 
-      <h3 style={{ margin: '1rem 0 0.5rem' }}>上次繳款（選填）</h3>
+      <h3 style={{ margin: '1rem 0 0.5rem' }}>上次繳款</h3>
+      <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.75rem', fontSize: '0.875rem' }}>
+        <input
+          type="checkbox"
+          checked={includeRenting}
+          onChange={(e) => setIncludeRenting(e.target.checked)}
+          style={{ width: 'auto' }}
+        />
+        選填
+      </label>
+      {includeRenting && (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
         <div className="form-group">
           <label>繳款日期</label>
@@ -376,6 +392,7 @@ export function CreateStatementForm({
           />
         </div>
       </div>
+      )}
 
       <button type="submit" className="btn btn-primary" style={{ marginTop: '1rem' }}>
         {editing ? '儲存' : '新增租單'}
