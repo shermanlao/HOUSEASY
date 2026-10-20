@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth';
 import { getStatement } from '@/actions/statement';
 import { PageShell } from '@/components/PageShell';
 import { chargeUsesReadings } from '@/lib/billing';
+import { formatMonthlyRent } from '@/lib/rent';
 
 function num(n: unknown): number {
   if (typeof n === 'number') return n;
@@ -23,7 +24,7 @@ export default async function StatementDetailPage({
 
   const billingTotal = stmt.billings.reduce((sum, b) => sum + num(b.qty) * num(b.unitRate), 0);
   const rentingBalance = stmt.rentings.reduce((sum, r) => sum + (num(r.paymentReceived) - num(r.openingBalance)), 0);
-  const monthlyRent = num(stmt.room.monthlyRent);
+  const monthlyRent = stmt.room.monthlyRent == null ? 0 : num(stmt.room.monthlyRent);
   const totalDue = monthlyRent + billingTotal - rentingBalance;
 
   return (
@@ -74,7 +75,7 @@ export default async function StatementDetailPage({
           </table>
         )}
 
-        <p style={{ marginTop: '0.5rem' }}><strong>月租：</strong>${monthlyRent.toLocaleString()}</p>
+        <p style={{ marginTop: '0.5rem' }}><strong>月租：</strong>{formatMonthlyRent(stmt.room.monthlyRent)}</p>
 
         {stmt.rentings.length > 0 && (
           <>

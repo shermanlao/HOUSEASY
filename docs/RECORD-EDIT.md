@@ -14,7 +14,7 @@
 | 記錄 | 編輯路徑 | 列表／詳情入口 |
 |------|----------|----------------|
 | 物業 | `/rental/properties/[id]/edit` | 物業列表、物業詳情 |
-| 房間 | `/rental/properties/[id]/rooms/[roomId]/edit` | 房間列表、物業／房間詳情 |
+| 房間 | `/rental/properties/[id]/rooms/[roomId]/edit` | 房間列表、物業／房間詳情。月租可留空 |
 | 租客 | `/rental/tenants/[id]/edit` | 房間詳情租客列 |
 | 租單 | `/rental/statements/[id]/edit` | 租單列表、租單詳情 |
 | 收據 | `/rental/receipts/[id]/edit` | 收據管理列表 |

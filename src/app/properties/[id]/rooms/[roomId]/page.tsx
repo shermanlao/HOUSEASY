@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth';
 import { getRoom } from '@/actions/room';
 import { AddTenantForm } from '@/components/AddTenantForm';
 import { PageShell } from '@/components/PageShell';
+import { formatMonthlyRent } from '@/lib/rent';
 
 export default async function RoomDetailPage({
   params,
@@ -40,7 +41,7 @@ export default async function RoomDetailPage({
             </tr>
             <tr>
               <td style={{ fontWeight: 600 }}>月租</td>
-              <td>${Number(room.monthlyRent).toLocaleString()}</td>
+              <td>{formatMonthlyRent(room.monthlyRent)}</td>
             </tr>
             <tr>
               <td style={{ fontWeight: 600 }}>物業</td>

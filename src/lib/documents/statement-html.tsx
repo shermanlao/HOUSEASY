@@ -97,7 +97,8 @@ function renderBillingSection(b: Billing): string {
 export function renderStatementHTML(stmt: StatementWithRelations): string {
   const billingTotal = stmt.billings.reduce((sum, b) => sum + num(b.qty) * num(b.unitRate), 0);
   const rentingBalance = stmt.rentings.reduce((sum, r) => sum + (num(r.paymentReceived) - num(r.openingBalance)), 0);
-  const monthlyRent = num(stmt.room.monthlyRent);
+  const monthlyRent = stmt.room.monthlyRent == null ? 0 : num(stmt.room.monthlyRent);
+  const rentLine = stmt.room.monthlyRent == null ? '—' : `HK$${monthlyRent.toLocaleString()}`;
   const totalDue = monthlyRent + billingTotal - rentingBalance;
 
   const billingSections = [...stmt.billings]
@@ -147,7 +148,7 @@ export function renderStatementHTML(stmt: StatementWithRelations): string {
   ${billingSections}
 
   <div class="section-title">本月租金 Monthly Rent</div>
-  <p>HK$${monthlyRent.toLocaleString()}</p>
+  <p>${rentLine}</p>
 
   ${stmt.rentings.length > 0 ? `
   <div class="section-title">上次繳款 Previous Payment</div>

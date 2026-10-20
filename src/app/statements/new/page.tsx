@@ -15,7 +15,7 @@ export default async function NewGlobalStatementPage() {
     name: r.name,
     propertyId: r.propertyId,
     propertyName: r.property.name || r.property.addressChinese,
-    monthlyRent: Number(r.monthlyRent),
+    monthlyRent: r.monthlyRent,
     tenants: r.tenants.map((t) => ({
       id: t.id,
       nameChinese: t.nameChinese,

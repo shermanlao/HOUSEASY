@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth';
 import { getProperty } from '@/actions/property';
 import { AddOwnerForm } from './AddOwnerForm';
 import { PageShell } from '@/components/PageShell';
+import { formatMonthlyRent } from '@/lib/rent';
 
 export default async function PropertyDetailPage({
   params,
@@ -89,7 +90,7 @@ export default async function PropertyDetailPage({
               {property.rooms.map((r) => (
                 <tr key={r.id}>
                   <td>{r.name}</td>
-                  <td>${Number(r.monthlyRent).toLocaleString()}</td>
+                  <td>{formatMonthlyRent(r.monthlyRent)}</td>
                   <td>{r.tenants.length}</td>
                   <td>{r._count.statements}</td>
                   <td>

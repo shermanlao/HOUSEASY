@@ -9,7 +9,7 @@ export function CreateRoomForm({
   room,
 }: {
   propertyId: string;
-  room?: { id: string; name: string; monthlyRent: number };
+  room?: { id: string; name: string; monthlyRent: number | null };
 }) {
   const router = useRouter();
   const [error, setError] = useState('');
@@ -74,8 +74,8 @@ export function CreateRoomForm({
             type="number"
             step="0.01"
             min="0"
-            required
-            defaultValue={room ? String(room.monthlyRent) : ''}
+            placeholder="選填"
+            defaultValue={room?.monthlyRent != null ? String(room.monthlyRent) : ''}
           />
         </div>
         <button type="submit" className="btn btn-primary">

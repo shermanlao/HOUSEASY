@@ -32,7 +32,7 @@ export default async function EditRoomPage({
           room={{
             id: room.id,
             name: room.name,
-            monthlyRent: Number(room.monthlyRent),
+            monthlyRent: room.monthlyRent,
           }}
         />
       </div>

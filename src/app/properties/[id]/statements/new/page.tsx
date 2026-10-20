@@ -22,7 +22,7 @@ export default async function NewStatementPage({
     id: r.id,
     name: r.name,
     propertyId: property.id,
-    monthlyRent: Number(r.monthlyRent),
+    monthlyRent: r.monthlyRent,
     tenants: r.tenants.map((t) => ({
       id: t.id,
       nameChinese: t.nameChinese,

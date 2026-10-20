@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth';
 import { getProperty } from '@/actions/property';
 import { CreateRoomForm } from '@/components/CreateRoomForm';
 import { PageShell } from '@/components/PageShell';
+import { formatMonthlyRent } from '@/lib/rent';
 
 export default async function PropertyRoomsPage({
   params,
@@ -49,7 +50,7 @@ export default async function PropertyRoomsPage({
               {property.rooms.map((r) => (
                 <tr key={r.id}>
                   <td>{r.name}</td>
-                  <td>${Number(r.monthlyRent).toLocaleString()}</td>
+                  <td>{formatMonthlyRent(r.monthlyRent)}</td>
                   <td>{r.tenants.length}</td>
                   <td>{r._count.statements}</td>
                   <td>

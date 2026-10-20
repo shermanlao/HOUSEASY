@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { accessiblePropertyIds, canAccessProperty, canAccessRoom } from '@/lib/access';
+import { parseOptionalMonthlyRent } from '@/lib/rent';
 
 export async function getRoomsForUser(propertyId?: string) {
   const session = await requireAuth();
@@ -48,10 +49,13 @@ export async function createRoom(formData: FormData) {
   const session = await requireAuth();
   const propertyId = formData.get('propertyId') as string;
   const name = (formData.get('name') as string)?.trim();
-  const monthlyRent = parseFloat(formData.get('monthlyRent') as string);
+  const monthlyRent = parseOptionalMonthlyRent(formData.get('monthlyRent'));
 
-  if (!propertyId || !name || isNaN(monthlyRent)) {
+  if (!propertyId || !name) {
     return { error: '請填寫必填欄位' };
+  }
+  if (!monthlyRent.ok) {
+    return { error: '月租必須為 0 或以上' };
   }
 
   if (!(await canAccessProperty(propertyId, session))) {
@@ -59,14 +63,14 @@ export async function createRoom(formData: FormData) {
   }
 
   const room = await prisma.room.create({
-    data: { propertyId, name, monthlyRent },
+    data: { propertyId, name, monthlyRent: monthlyRent.value },
   });
   return { success: true, id: room.id };
 }
 
 export async function updateRoom(
   id: string,
-  data: { name?: string; monthlyRent?: number }
+  data: { name?: string; monthlyRent?: number | null }
 ) {
   const session = await requireAuth();
   if (!(await canAccessRoom(id, session))) return { error: '權限不足' };
@@ -75,7 +79,7 @@ export async function updateRoom(
     where: { id },
     data: {
       ...(data.name != null && { name: data.name }),
-      ...(data.monthlyRent != null && { monthlyRent: data.monthlyRent }),
+      ...(data.monthlyRent !== undefined && { monthlyRent: data.monthlyRent }),
     },
   });
   return { success: true };

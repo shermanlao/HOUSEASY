@@ -23,7 +23,7 @@ export default async function EditStatementPage({
     name: r.name,
     propertyId: r.propertyId,
     propertyName: r.property.name || r.property.addressChinese,
-    monthlyRent: Number(r.monthlyRent),
+    monthlyRent: r.monthlyRent,
     tenants: r.tenants.map((t) => ({
       id: t.id,
       nameChinese: t.nameChinese,
@@ -36,7 +36,7 @@ export default async function EditStatementPage({
       name: stmt.room.name,
       propertyId: stmt.room.propertyId,
       propertyName: stmt.room.property.name || stmt.room.property.addressChinese,
-      monthlyRent: Number(stmt.room.monthlyRent),
+      monthlyRent: stmt.room.monthlyRent,
       tenants: [
         {
           id: stmt.tenant.id,

@@ -4,13 +4,14 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { withBasePath } from '@/lib/base-path';
 import { inferChargeMode, type ChargeMode } from '@/lib/billing';
+import { formatMonthlyRent } from '@/lib/rent';
 
 type RoomOption = {
   id: string;
   name: string;
   propertyId: string;
   propertyName?: string;
-  monthlyRent: number;
+  monthlyRent: number | null;
   tenants: { id: string; nameChinese: string; nameEnglish: string }[];
 };
 
@@ -217,7 +218,7 @@ export function CreateStatementForm({
       </div>
       {selectedRoom && (
         <p style={{ color: 'var(--muted)', marginBottom: '1rem' }}>
-          月租：${Number(selectedRoom.monthlyRent).toLocaleString()}
+          月租：{formatMonthlyRent(selectedRoom.monthlyRent)}
         </p>
       )}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>

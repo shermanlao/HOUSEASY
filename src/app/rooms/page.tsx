@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/auth';
 import { getRoomsForUser } from '@/actions/room';
 import { PageShell } from '@/components/PageShell';
+import { formatMonthlyRent } from '@/lib/rent';
 
 export default async function RoomsPage() {
   const session = await getSession();
@@ -33,7 +34,7 @@ export default async function RoomsPage() {
                 <tr key={r.id}>
                   <td>{r.property.name || r.property.addressChinese}</td>
                   <td>{r.name}</td>
-                  <td>${Number(r.monthlyRent).toLocaleString()}</td>
+                  <td>{formatMonthlyRent(r.monthlyRent)}</td>
                   <td>{r._count.tenants}</td>
                   <td>{r._count.statements}</td>
                   <td>
