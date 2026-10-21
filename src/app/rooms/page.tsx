@@ -35,7 +35,7 @@ export default async function RoomsPage() {
                   <td>{r.property.name || r.property.addressChinese}</td>
                   <td>{r.name}</td>
                   <td>{formatMonthlyRent(r.monthlyRent)}</td>
-                  <td>{r._count.tenants}</td>
+                  <td>{r.tenants.filter((t) => t.isActive).length}</td>
                   <td>{r._count.statements}</td>
                   <td>
                     <Link href={`/properties/${r.propertyId}/rooms/${r.id}`}>檢視</Link>

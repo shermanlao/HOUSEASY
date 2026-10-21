@@ -84,6 +84,9 @@ export async function createStatement(data: {
   if (!tenant || tenant.roomId !== data.roomId) {
     return { error: '租客不屬於此房間' };
   }
+  if (!tenant.isActive) {
+    return { error: '只能選擇在住租客' };
+  }
 
   await prisma.statement.create({
     data: {
@@ -135,6 +138,9 @@ export async function updateStatement(
   const tenant = await prisma.tenant.findUnique({ where: { id: data.tenantId } });
   if (!tenant || tenant.roomId !== data.roomId) {
     return { error: '租客不屬於此房間' };
+  }
+  if (!tenant.isActive && tenant.id !== stmt.tenantId) {
+    return { error: '只能選擇在住租客' };
   }
 
   await prisma.$transaction(async (tx) => {

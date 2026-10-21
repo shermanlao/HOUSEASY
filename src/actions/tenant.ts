@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { canAccessRoom } from '@/lib/access';
+import { ACTIVE_TENANT_ERROR, createActiveTenant } from '@/lib/tenant';
 
 export async function createTenant(formData: FormData) {
   const session = await requireAuth();
@@ -20,9 +21,14 @@ export async function createTenant(formData: FormData) {
     return { error: '權限不足' };
   }
 
-  await prisma.tenant.create({
-    data: { roomId, nameChinese, nameEnglish, phone, passportOrHkid },
-  });
+  try {
+    await createActiveTenant({ roomId, nameChinese, nameEnglish, phone, passportOrHkid });
+  } catch (err) {
+    if (err instanceof Error && err.message === ACTIVE_TENANT_ERROR) {
+      return { error: ACTIVE_TENANT_ERROR };
+    }
+    throw err;
+  }
   return { success: true };
 }
 

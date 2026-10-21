@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth';
 import { getProperty } from '@/actions/property';
 import { CreateStatementForm } from '../CreateStatementForm';
 import { PageShell } from '@/components/PageShell';
+import { tenantsForStatement } from '@/lib/tenant';
 
 export default async function NewStatementPage({
   params,
@@ -23,10 +24,11 @@ export default async function NewStatementPage({
     name: r.name,
     propertyId: property.id,
     monthlyRent: r.monthlyRent,
-    tenants: r.tenants.map((t) => ({
+    tenants: tenantsForStatement(r.tenants).map((t) => ({
       id: t.id,
       nameChinese: t.nameChinese,
       nameEnglish: t.nameEnglish,
+      isActive: t.isActive,
     })),
   }));
 

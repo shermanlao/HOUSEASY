@@ -26,6 +26,8 @@ export default async function EditTenantPage({
       <h1 style={{ marginTop: '1rem' }}>編輯租客</h1>
       <p style={{ color: 'var(--muted)', marginTop: '0.25rem' }}>
         {tenant.room.property.addressChinese} / {tenant.room.name}
+        {' · '}
+        {tenant.isActive ? '在住' : '已遷出'}
       </p>
 
       <div className="card" style={{ marginTop: '1.5rem' }}>

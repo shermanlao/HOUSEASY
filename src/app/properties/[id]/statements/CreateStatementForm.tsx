@@ -12,7 +12,7 @@ type RoomOption = {
   propertyId: string;
   propertyName?: string;
   monthlyRent: number | null;
-  tenants: { id: string; nameChinese: string; nameEnglish: string }[];
+  tenants: { id: string; nameChinese: string; nameEnglish: string; isActive?: boolean }[];
 };
 
 type BillingInput = {
@@ -211,7 +211,7 @@ export function CreateStatementForm({
           <option value="">請選擇</option>
           {(selectedRoom?.tenants || []).map((t) => (
             <option key={t.id} value={t.id}>
-              {t.nameChinese} {t.nameEnglish}
+              {t.nameChinese} {t.nameEnglish}{t.isActive === false ? '（已遷出）' : ''}
             </option>
           ))}
         </select>

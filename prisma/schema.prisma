@@ -60,10 +60,13 @@ model Tenant {
   nameEnglish    String
   phone          String
   passportOrHkid String?
+  isActive       Boolean @default(true)
   roomId         String
 
   room       Room        @relation(fields: [roomId], references: [id], onDelete: Cascade)
   statements Statement[]
+
+  // At most one active tenant per room: partial unique index Tenant_one_active_per_room.
 }
 
 model Statement {

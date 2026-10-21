@@ -6,6 +6,7 @@ import { getRoomsForUser } from '@/actions/room';
 import { CreateStatementForm } from '@/app/properties/[id]/statements/CreateStatementForm';
 import { PageShell } from '@/components/PageShell';
 import { toInputDate } from '@/lib/dates';
+import { tenantsForStatement } from '@/lib/tenant';
 
 export default async function EditStatementPage({
   params,
@@ -24,10 +25,11 @@ export default async function EditStatementPage({
     propertyId: r.propertyId,
     propertyName: r.property.name || r.property.addressChinese,
     monthlyRent: r.monthlyRent,
-    tenants: r.tenants.map((t) => ({
+    tenants: tenantsForStatement(r.tenants, stmt.tenantId).map((t) => ({
       id: t.id,
       nameChinese: t.nameChinese,
       nameEnglish: t.nameEnglish,
+      isActive: t.isActive,
     })),
   }));
   if (!options.some((r) => r.id === stmt.roomId)) {
@@ -42,6 +44,7 @@ export default async function EditStatementPage({
           id: stmt.tenant.id,
           nameChinese: stmt.tenant.nameChinese,
           nameEnglish: stmt.tenant.nameEnglish,
+          isActive: stmt.tenant.isActive,
         },
       ],
     });

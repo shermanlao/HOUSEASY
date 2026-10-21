@@ -39,7 +39,7 @@ export default async function PropertiesPage() {
             </thead>
             <tbody>
               {properties.map((p) => {
-                const tenantCount = p.rooms.reduce((n, r) => n + r.tenants.length, 0);
+                const tenantCount = p.rooms.reduce((n, r) => n + r.tenants.filter((t) => t.isActive).length, 0);
                 const statementCount = p.rooms.reduce((n, r) => n + r._count.statements, 0);
                 return (
                   <tr key={p.id}>

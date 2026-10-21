@@ -35,7 +35,7 @@ export async function getRoom(id: string) {
           owners: { include: { user: { select: { id: true, name: true, email: true } } } },
         },
       },
-      tenants: true,
+      tenants: { orderBy: [{ isActive: 'desc' }, { nameChinese: 'asc' }] },
       _count: { select: { statements: true } },
     },
   });

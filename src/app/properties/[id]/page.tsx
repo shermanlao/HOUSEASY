@@ -91,7 +91,7 @@ export default async function PropertyDetailPage({
                 <tr key={r.id}>
                   <td>{r.name}</td>
                   <td>{formatMonthlyRent(r.monthlyRent)}</td>
-                  <td>{r.tenants.length}</td>
+                  <td>{r.tenants.filter((t) => t.isActive).length}</td>
                   <td>{r._count.statements}</td>
                   <td>
                     <Link href={`/properties/${id}/rooms/${r.id}`}>檢視</Link>

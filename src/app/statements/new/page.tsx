@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth';
 import { getRoomsForUser } from '@/actions/room';
 import { CreateStatementForm } from '@/app/properties/[id]/statements/CreateStatementForm';
 import { PageShell } from '@/components/PageShell';
+import { tenantsForStatement } from '@/lib/tenant';
 
 export default async function NewGlobalStatementPage() {
   const session = await getSession();
@@ -16,10 +17,11 @@ export default async function NewGlobalStatementPage() {
     propertyId: r.propertyId,
     propertyName: r.property.name || r.property.addressChinese,
     monthlyRent: r.monthlyRent,
-    tenants: r.tenants.map((t) => ({
+    tenants: tenantsForStatement(r.tenants).map((t) => ({
       id: t.id,
       nameChinese: t.nameChinese,
       nameEnglish: t.nameEnglish,
+      isActive: t.isActive,
     })),
   }));
 

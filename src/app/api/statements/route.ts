@@ -21,6 +21,9 @@ export async function POST(request: NextRequest) {
     if (!tenant || tenant.roomId !== roomId) {
       return Response.json({ error: '租客不屬於此房間' }, { status: 400 });
     }
+    if (!tenant.isActive) {
+      return Response.json({ error: '只能選擇在住租客' }, { status: 400 });
+    }
 
     await prisma.statement.create({
       data: {
@@ -81,6 +84,9 @@ export async function PATCH(request: NextRequest) {
     const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
     if (!tenant || tenant.roomId !== roomId) {
       return Response.json({ error: '租客不屬於此房間' }, { status: 400 });
+    }
+    if (!tenant.isActive && tenant.id !== stmt.tenantId) {
+      return Response.json({ error: '只能選擇在住租客' }, { status: 400 });
     }
 
     await prisma.$transaction(async (tx) => {

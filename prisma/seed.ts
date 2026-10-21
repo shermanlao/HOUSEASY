@@ -73,6 +73,7 @@ async function main() {
         nameEnglish: 'CHAN, Lo Sze Celia',
         phone: '6056 0546',
         passportOrHkid: 'A1234567',
+        isActive: true,
         roomId: room.id,
       },
     });
