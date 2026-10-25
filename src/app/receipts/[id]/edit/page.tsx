@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getSession } from '@/lib/auth';
 import { getReceipt } from '@/actions/receipt';
-import { AddReceiptForm } from '@/app/statements/[id]/receipts/AddReceiptForm';
+import { AddReceiptForm } from '@/app/tenancy/[id]/receipts/AddReceiptForm';
 import { PageShell } from '@/components/PageShell';
 import { toInputDate } from '@/lib/dates';
 
@@ -16,7 +16,7 @@ export default async function EditReceiptPage({
   const receipt = await getReceipt(id);
   if (!receipt) notFound();
 
-  const statementHref = `/statements/${receipt.statementId}/receipts`;
+  const statementHref = `/tenancy/${receipt.statementId}/receipts`;
 
   return (
     <PageShell role={session?.role} propertyId={receipt.statement.room.propertyId}>

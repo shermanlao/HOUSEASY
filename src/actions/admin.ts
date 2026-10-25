@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth';
+import { decodeSignaturePng } from '@/lib/signature-png';
 import * as bcrypt from 'bcryptjs';
 
 export async function addOwner(formData: FormData) {
@@ -28,10 +29,26 @@ export async function addOwner(formData: FormData) {
 
 export async function getUsers() {
   await requireAdmin();
-  return prisma.user.findMany({
+  const users = await prisma.user.findMany({
     orderBy: { createdAt: 'desc' },
     select: { id: true, email: true, name: true, role: true, createdAt: true },
   });
+  const signed = await prisma.user.findMany({
+    where: { signaturePng: { not: null } },
+    select: { id: true },
+  });
+  const signedIds = new Set(signed.map((u) => u.id));
+  return users.map((u) => ({ ...u, hasSignature: signedIds.has(u.id) }));
+}
+
+export async function getUserSignaturePng(id: string) {
+  await requireAdmin();
+  if (!id) return null;
+  const user = await prisma.user.findUnique({
+    where: { id },
+    select: { signaturePng: true },
+  });
+  return user?.signaturePng ?? null;
 }
 
 export async function updateUser(data: {
@@ -40,9 +57,11 @@ export async function updateUser(data: {
   name: string;
   role: string;
   password?: string;
+  signaturePng?: string;
+  clearSignature?: boolean;
 }) {
   await requireAdmin();
-  const { id, email, name, role, password } = data;
+  const { id, email, name, role, password, signaturePng, clearSignature } = data;
 
   if (!id || !email || !name || !role) {
     return { error: '請填寫所有必填欄位' };
@@ -71,10 +90,21 @@ export async function updateUser(data: {
     name: string;
     role: string;
     passwordHash?: string;
+    signaturePng?: Buffer | null;
   } = { email, name, role };
 
   if (password) {
     updateData.passwordHash = await bcrypt.hash(password, 10);
+  }
+
+  if (clearSignature) {
+    updateData.signaturePng = null;
+  } else if (signaturePng) {
+    const parsed = decodeSignaturePng(signaturePng);
+    if ('error' in parsed) {
+      return { error: parsed.error };
+    }
+    updateData.signaturePng = parsed.bytes;
   }
 
   await prisma.user.update({ where: { id }, data: updateData });

@@ -13,7 +13,7 @@ export default async function AllStatementsPage() {
     <PageShell role={session.role}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
         <h1 style={{ margin: 0 }}>租單管理</h1>
-        <Link href="/statements/new" className="btn btn-primary">
+        <Link href="/tenancy/new" className="btn btn-primary">
           新增租單
         </Link>
       </div>
@@ -42,11 +42,11 @@ export default async function AllStatementsPage() {
                   <td>{new Date(s.periodStart).toLocaleDateString('zh-Hant')}</td>
                   <td>{new Date(s.periodEnd).toLocaleDateString('zh-Hant')}</td>
                   <td>
-                    <Link href={`/statements/${s.id}`}>檢視</Link>
+                    <Link href={`/tenancy/${s.id}`}>檢視</Link>
                     {' | '}
-                    <Link href={`/statements/${s.id}/edit`}>編輯</Link>
+                    <Link href={`/tenancy/${s.id}/edit`}>編輯</Link>
                     {' | '}
-                    <Link href={`/statements/${s.id}/print`} target="_blank">列印租單</Link>
+                    <Link href={`/tenancy/${s.id}/print`} target="_blank">列印租單</Link>
                   </td>
                 </tr>
               ))}

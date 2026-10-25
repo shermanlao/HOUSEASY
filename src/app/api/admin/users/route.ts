@@ -1,8 +1,39 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth';
 import * as bcrypt from 'bcryptjs';
-import { deleteUser, updateUser } from '@/actions/admin';
+import { deleteUser, getUserSignaturePng, updateUser } from '@/actions/admin';
+
+export async function GET(request: NextRequest) {
+  try {
+    await requireAdmin();
+    const id = request.nextUrl.searchParams.get('id');
+    if (!id) {
+      return Response.json({ error: '缺少用戶' }, { status: 400 });
+    }
+    const png = await getUserSignaturePng(id);
+    if (!png) {
+      return new NextResponse(null, { status: 404 });
+    }
+    return new NextResponse(Uint8Array.from(png), {
+      headers: {
+        'Content-Type': 'image/png',
+        'Cache-Control': 'private, no-store',
+      },
+    });
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      if (err.message === 'UNAUTHORIZED') {
+        return Response.json({ error: '請先登入' }, { status: 401 });
+      }
+      if (err.message === 'FORBIDDEN') {
+        return Response.json({ error: '權限不足' }, { status: 403 });
+      }
+    }
+    console.error(err);
+    return Response.json({ error: '讀取失敗' }, { status: 500 });
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -53,6 +84,8 @@ export async function PATCH(request: NextRequest) {
       name: body.name,
       role: body.role,
       password: body.password || undefined,
+      signaturePng: typeof body.signaturePng === 'string' ? body.signaturePng : undefined,
+      clearSignature: body.clearSignature === true,
     });
     if (result.error) {
       return Response.json({ error: result.error }, { status: 400 });

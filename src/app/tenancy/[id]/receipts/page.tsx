@@ -24,7 +24,7 @@ export default async function ReceiptsPage({
   return (
     <PageShell role={session?.role} propertyId={stmt.room.propertyId}>
       <div style={{ marginTop: '1rem' }}>
-        <Link href={`/statements/${id}`}>← 返回租單</Link>
+        <Link href={`/tenancy/${id}`}>← 返回租單</Link>
       </div>
       <h1 style={{ marginTop: '1rem' }}>收據管理</h1>
       <p style={{ color: 'var(--muted)' }}>{stmt.tenant.nameChinese} - {new Date(stmt.periodStart).toLocaleDateString('zh-Hant')} 至 {new Date(stmt.periodEnd).toLocaleDateString('zh-Hant')}</p>

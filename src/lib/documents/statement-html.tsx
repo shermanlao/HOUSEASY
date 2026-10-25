@@ -1,5 +1,6 @@
 import type { Statement, Property, Tenant, Billing, Renting, Room } from '@prisma/client';
 import { chargeUsesReadings } from '@/lib/billing';
+import type { OwnerSignature } from '@/lib/documents/owner-signatures';
 
 function num(n: unknown): number {
   if (typeof n === 'number') return n;
@@ -94,7 +95,36 @@ function renderBillingSection(b: Billing): string {
   </table>`;
 }
 
-export function renderStatementHTML(stmt: StatementWithRelations): string {
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function renderOwnerSignatures(signatures: OwnerSignature[]): string {
+  if (signatures.length === 0) return '';
+  const blocks = signatures
+    .map(
+      (s) => `
+    <div class="signature-block">
+      <img src="data:image/png;base64,${s.pngBase64}" alt="">
+      <div class="signature-name">${escapeHtml(s.name)}</div>
+    </div>`
+    )
+    .join('');
+  return `
+  <div class="signatures">
+    <div class="section-title">業主簽署 / Landlord signature</div>
+    <div class="signature-row">${blocks}</div>
+  </div>`;
+}
+
+export function renderStatementHTML(
+  stmt: StatementWithRelations,
+  ownerSignatures: OwnerSignature[] = []
+): string {
   const billingTotal = stmt.billings.reduce((sum, b) => sum + num(b.qty) * num(b.unitRate), 0);
   const rentingBalance = stmt.rentings.reduce((sum, r) => sum + (num(r.paymentReceived) - num(r.openingBalance)), 0);
   const monthlyRent = stmt.room.monthlyRent == null ? 0 : num(stmt.room.monthlyRent);
@@ -135,6 +165,11 @@ export function renderStatementHTML(stmt: StatementWithRelations): string {
     .section-title { font-weight: 600; margin: 16px 0 8px; }
     .total { font-weight: 600; font-size: 1.1rem; margin-top: 8px; background: #ffffcc; padding: 8px; }
     .note { font-size: 0.85rem; color: #666; margin-top: 16px; }
+    .signatures { margin-top: 32px; }
+    .signature-row { display: flex; flex-wrap: wrap; gap: 32px; }
+    .signature-block { text-align: center; min-width: 140px; }
+    .signature-block img { height: 80px; width: auto; max-width: 220px; object-fit: contain; display: block; margin: 0 auto; }
+    .signature-name { margin-top: 4px; font-size: 0.9rem; }
   </style>
 </head>
 <body>
@@ -167,6 +202,7 @@ export function renderStatementHTML(stmt: StatementWithRelations): string {
 
   <div class="total">合計 Total: HK$${(monthlyRent + billingTotal).toFixed(2)}${rentingBalance !== 0 ? ` - $${rentingBalance.toFixed(2)}` : ''} = HK$${totalDue.toFixed(2)}</div>
   <div class="note">總數金額 = 本月租金+電費+水費-上月結餘<br>Total Amount = Monthly Rent + Electricity Fee + Water Fee - Previous Balance</div>
+  ${renderOwnerSignatures(ownerSignatures)}
 </body>
 </html>`;
 }

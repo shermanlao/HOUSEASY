@@ -32,7 +32,7 @@ SEARCH_ADMIN_TOKEN="shared-secret"
 JWT_SECRET="same-as-rental-app"
 ```
 
-兩邊 `SEARCH_ADMIN_TOKEN` 與 `JWT_SECRET` 必須相同。搜尋站頁首在偵測到管理員 cookie 時，會把「登入」改成連到此控制台的「搜尋管理」。
+兩邊 `SEARCH_ADMIN_TOKEN` 與 `JWT_SECRET` 必須相同。搜尋站頁首在偵測到登入 cookie 時顯示用戶姓名；管理員另外顯示連到此控制台的「搜尋管理」。未登入才顯示「登入」。
 
 搜尋服務受保護的 API：
 

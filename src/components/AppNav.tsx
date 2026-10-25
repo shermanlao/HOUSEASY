@@ -9,11 +9,11 @@ export function AppNav({
   propertyId?: string;
 }) {
   const roomsHref = propertyId ? `/properties/${propertyId}/rooms` : '/rooms';
-  const statementsHref = propertyId ? `/properties/${propertyId}/statements` : '/statements';
+  const statementsHref = propertyId ? `/properties/${propertyId}/statements` : '/tenancy';
 
   return (
     <nav className="nav">
-      <Link href="/">首頁</Link>
+      <a href="/">首頁</a>
       <Link href="/properties">物業管理</Link>
       <Link href={roomsHref}>房間管理</Link>
       <Link href={statementsHref}>租單管理</Link>

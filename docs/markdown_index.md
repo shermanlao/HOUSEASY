@@ -6,7 +6,7 @@
 | [LOCAL-SETUP.md](LOCAL-SETUP.md) | UNC / network-drive local install notes |
 | [DEPLOY-POSTGRESQL.md](DEPLOY-POSTGRESQL.md) | Switching Prisma to PostgreSQL (schema notes) |
 | [DEPLOY-VPS-HOSTINGER.md](DEPLOY-VPS-HOSTINGER.md) | Hostinger VPS: PropertySearching at `/` + RentalEasy at `/rental` (Nginx + PM2) |
-| [ADMIN-USERS.md](ADMIN-USERS.md) | Admin user list, edit dialog, and delete (`/rental/admin/users`) |
+| [ADMIN-USERS.md](ADMIN-USERS.md) | Admin user list, edit dialog, signature, and delete (`/rental/admin/users`) |
 | [PROPERTIES.md](PROPERTIES.md) | Property list; admin sees which owner each property belongs to |
 | [ROOMS.md](ROOMS.md) | Rooms under a property; tenants and statements belong to a room |
 | [RECORD-EDIT.md](RECORD-EDIT.md) | Edit pages for property, room, tenant, statement, receipt, and users |

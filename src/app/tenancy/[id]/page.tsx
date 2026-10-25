@@ -107,13 +107,13 @@ export default async function StatementDetailPage({
       </div>
 
       <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-        <Link href={`/statements/${id}/edit`} className="btn btn-primary">
+        <Link href={`/tenancy/${id}/edit`} className="btn btn-primary">
           編輯租單
         </Link>
-        <Link href={`/statements/${id}/print`} className="btn btn-secondary" target="_blank">
+        <Link href={`/tenancy/${id}/print`} className="btn btn-secondary" target="_blank">
           列印租單
         </Link>
-        <Link href={`/statements/${id}/receipts`} className="btn btn-secondary">
+        <Link href={`/tenancy/${id}/receipts`} className="btn btn-secondary">
           收據管理
         </Link>
       </div>

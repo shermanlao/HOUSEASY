@@ -170,7 +170,7 @@ export function CreateStatementForm({
       setError(data.error || (editing ? '更新失敗' : '新增失敗'));
       return;
     }
-    router.push(returnTo || (statement ? `/statements/${statement.id}` : `/properties/${selectedRoom?.propertyId || ''}/statements`));
+    router.push(returnTo || (statement ? `/tenancy/${statement.id}` : `/properties/${selectedRoom?.propertyId || ''}/statements`));
     router.refresh();
   }
 

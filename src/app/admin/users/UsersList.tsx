@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { withBasePath } from '@/lib/base-path';
+import { SignatureField, type SignatureChange } from './SignatureField';
 
 export type AdminUserRow = {
   id: string;
@@ -10,6 +11,7 @@ export type AdminUserRow = {
   name: string;
   role: string;
   createdAt: string | Date;
+  hasSignature: boolean;
 };
 
 export function UsersList({
@@ -25,6 +27,7 @@ export function UsersList({
   const [listError, setListError] = useState('');
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [signatureChange, setSignatureChange] = useState<SignatureChange | null>(null);
 
   async function handleDelete(user: AdminUserRow) {
     setListError('');
@@ -63,6 +66,7 @@ export function UsersList({
         name: formData.get('name'),
         role: formData.get('role'),
         password: password || undefined,
+        ...(signatureChange ?? {}),
       }),
     });
     const data = await res.json();
@@ -72,6 +76,7 @@ export function UsersList({
       return;
     }
     setEditing(null);
+    setSignatureChange(null);
     router.refresh();
   }
 
@@ -96,6 +101,7 @@ export function UsersList({
             <th>電郵</th>
             <th>姓名</th>
             <th>角色</th>
+            <th>簽署</th>
             <th>建立時間</th>
             <th>操作</th>
           </tr>
@@ -108,6 +114,7 @@ export function UsersList({
                 key={u.id}
                 onClick={() => {
                   setError('');
+                  setSignatureChange(null);
                   setEditing(u);
                 }}
                 style={{ cursor: 'pointer' }}
@@ -116,6 +123,7 @@ export function UsersList({
                 <td style={{ color: 'var(--primary)' }}>{u.email}</td>
                 <td>{u.name}</td>
                 <td>{u.role === 'ADMIN' ? '管理員' : '業主'}</td>
+                <td>{u.hasSignature ? '已設定' : '—'}</td>
                 <td>{new Date(u.createdAt).toLocaleDateString('zh-Hant')}</td>
                 <td>
                   <button
@@ -158,7 +166,13 @@ export function UsersList({
           <div
             className="card"
             onClick={(e) => e.stopPropagation()}
-            style={{ width: '100%', maxWidth: '420px', margin: 0 }}
+            style={{
+              width: '100%',
+              maxWidth: '560px',
+              margin: 0,
+              maxHeight: '90vh',
+              overflowY: 'auto',
+            }}
           >
             <h2 id="edit-user-title" style={{ marginBottom: '1rem' }}>
               編輯用戶
@@ -214,6 +228,13 @@ export function UsersList({
                   autoComplete="new-password"
                 />
               </div>
+              <SignatureField
+                key={editing.id}
+                userId={editing.id}
+                hasSignature={editing.hasSignature}
+                disabled={saving}
+                onChange={setSignatureChange}
+              />
               <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                 <button
                   type="button"

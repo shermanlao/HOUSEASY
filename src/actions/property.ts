@@ -59,14 +59,6 @@ export async function createProperty(formData: FormData) {
   return { success: true, id: property.id };
 }
 
-export async function addOwnerToProperty(propertyId: string, userId: string) {
-  await requireAuth();
-  await prisma.propertyOwner.create({
-    data: { propertyId, userId },
-  });
-  return { success: true };
-}
-
 export async function getProperty(id: string) {
   const session = await requireAuth();
   const property = await prisma.property.findFirst({

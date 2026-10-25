@@ -32,7 +32,7 @@ export function AddReceiptForm({
       return;
     }
     if (editing) {
-      router.push(`/statements/${statementId}/receipts`);
+      router.push(`/tenancy/${statementId}/receipts`);
     } else {
       form.reset();
     }

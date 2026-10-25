@@ -67,11 +67,11 @@ export default async function StatementsPage({
                   <td>{new Date(s.periodStart).toLocaleDateString('zh-Hant')}</td>
                   <td>{new Date(s.periodEnd).toLocaleDateString('zh-Hant')}</td>
                   <td>
-                    <Link href={`/statements/${s.id}`}>檢視</Link>
+                    <Link href={`/tenancy/${s.id}`}>檢視</Link>
                     {' | '}
-                    <Link href={`/statements/${s.id}/edit`}>編輯</Link>
+                    <Link href={`/tenancy/${s.id}/edit`}>編輯</Link>
                     {' | '}
-                    <Link href={`/statements/${s.id}/print`} target="_blank">列印租單</Link>
+                    <Link href={`/tenancy/${s.id}/print`} target="_blank">列印租單</Link>
                   </td>
                 </tr>
               ))}

@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getSession } from '@/lib/auth';
 import { getProperty } from '@/actions/property';
-import { AddOwnerForm } from './AddOwnerForm';
 import { PageShell } from '@/components/PageShell';
 import { formatMonthlyRent } from '@/lib/rent';
 
@@ -59,11 +58,6 @@ export default async function PropertyDetailPage({
             </tr>
           </tbody>
         </table>
-        {canEdit && session?.role === 'ADMIN' && (
-          <div style={{ marginTop: '1rem' }}>
-            <AddOwnerForm propertyId={id} />
-          </div>
-        )}
       </div>
 
       <div className="card" style={{ marginTop: '1.5rem' }}>

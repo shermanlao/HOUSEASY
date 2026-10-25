@@ -16,9 +16,9 @@
 | 物業 | `/rental/properties/[id]/edit` | 物業列表、物業詳情 |
 | 房間 | `/rental/properties/[id]/rooms/[roomId]/edit` | 房間列表、物業／房間詳情。月租可留空 |
 | 租客 | `/rental/tenants/[id]/edit` | 房間詳情租客列。遷出保留紀錄；只有已遷出的租客可以刪除 |
-| 租單 | `/rental/statements/[id]/edit` | 租單列表、租單詳情 |
+| 租單 | `/rental/tenancy/[id]/edit` | 租單列表、租單詳情 |
 | 收據 | `/rental/receipts/[id]/edit` | 收據管理列表 |
-| 用戶（管理員） | `/rental/admin/users` 編輯對話框 | 管理員用戶列表（點擊列） |
+| 用戶（管理員） | `/rental/admin/users` 編輯對話框（含簽署） | 管理員用戶列表（點擊列） |
 | 用戶（業主） | `/rental/account/edit` | 業主「用戶管理」列表，只有自己一列 |
 
 儲存走既有集合 API 的 `PATCH`（`/api/properties`、`/api/rooms`、`/api/tenants`、`/api/statements`、`/api/receipts`、`/api/account`）。權限與檢視相同：業主只能改自己物業底下的資料，以及自己的用戶帳號。
