@@ -17,7 +17,7 @@
 
 ## 技術棧
 
-- Next.js 14 (App Router)
+- Next.js 15 (App Router)
 - PostgreSQL + Prisma (Neon / 本地)
 - bcryptjs（密碼）
 - jose（JWT 會話）
